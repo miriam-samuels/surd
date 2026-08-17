@@ -24,7 +24,7 @@ export function Container({
   return (
     <div
       className={cn(
-        !noPadding && "px-5 sm:px-8 lg:px-12 xl:px-20",
+        !noPadding ? "px-5 sm:px-8 lg:px-12 xl:px-20" : "px-4 sm:px-6 lg:px-4",
         "mx-auto w-full",
         widths[width],
         className,
