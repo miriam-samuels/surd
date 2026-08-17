@@ -129,7 +129,7 @@ export function IntroCollageSection() {
         </div>
 
         <div className="mt-10 flex flex-col gap-6 lg:mt-4 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-          <h1 className="max-w-2xl font-batica-medium text-heading-sm font-bold tracking-wide text-balance text-primary sm:text-heading-md">
+          <h1 className="max-w-2xl font-batica text-heading-sm font-bold tracking-wide text-balance text-primary sm:text-heading-md">
             {ABOUT_INTRO.title}
           </h1>
           <p className="max-w-[29rem] text-paragraph-md text-grey-400 font-medium">

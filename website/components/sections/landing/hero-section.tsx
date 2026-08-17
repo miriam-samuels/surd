@@ -22,7 +22,7 @@ export function HeroSection() {
       <div className="flex flex-col items-center pt-12 pb-8 text-center sm:pt-24">
         <Eyebrow className="text-sm font-normal" icon={FlowerPotIcon}>{HERO.eyebrow}</Eyebrow>
 
-        <h1 className="mt-10 font-batica-extrabold text-heading-md text-balance sm:text-heading-lg lg:text-heading-xl tracking-wide">
+        <h1 className="mt-10 font-batica font-extrabold text-heading-md text-balance sm:text-heading-lg lg:text-heading-xl tracking-wide">
           <span className="text-grey-200">{HERO.titleMuted}</span>
           <br />
           <span className="text-grey-1000">{HERO.title}</span>

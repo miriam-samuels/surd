@@ -65,7 +65,7 @@ export function SectionHeading({
       )}
     >
       {eyebrow}
-      <h2 className="max-w-4xl font-batica-bold tracking-wide text-heading-sm font-extrabold text-balance sm:text-heading-lg">
+      <h2 className="max-w-4xl font-batica tracking-wide text-heading-sm font-extrabold text-balance sm:text-heading-lg">
         {title}
       </h2>
       {description ? (

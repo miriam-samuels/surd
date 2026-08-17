@@ -121,7 +121,7 @@ export function HeroBand({
 
         <h1
           className={cn(
-            "text-heading-md font-batica-bold text-balance sm:text-heading-lg",
+            "text-heading-md font-batica font-bold text-balance sm:text-heading-lg",
             palette.title,
           )}
         >

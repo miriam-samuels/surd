@@ -29,7 +29,7 @@ icons). It is a developer aid, not a public page.
 | Styling       | Tailwind CSS v4 — CSS-first config, no `tailwind.config` |
 | Components    | [Radix UI](https://www.radix-ui.com) (`radix-ui` package) |
 | Icons         | [Hugeicons](https://hugeicons.com) by HalalLab            |
-| Font          | Plus Jakarta Sans via `next/font/google`                  |
+| Font          | Batica Sans (display, variable, `app/fonts/`) + Plus Jakarta Sans (body, `next/font/google`) |
 
 ---
 

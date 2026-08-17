@@ -22,7 +22,7 @@ export function FaqSection() {
           >
             {LANDING_FAQ_INTRO.eyebrow}
           </Eyebrow>
-          <h2 className="max-w-lg font-batica-bold text-heading-md tracking-wide text-balance text-white sm:text-heading-lg">
+          <h2 className="max-w-lg font-batica font-bold text-heading-md tracking-wide text-balance text-white sm:text-heading-lg">
             {LANDING_FAQ_INTRO.title}
           </h2>
           <p className="text-sm text-grey-400">

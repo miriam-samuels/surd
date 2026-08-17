@@ -21,7 +21,7 @@ export function WhySurdSection() {
             <Eyebrow tone="dark" icon={FlashIcon} className="bg-blue-900 text-surd-blue-100 text-sm">
               {WHY_SURD.eyebrow}
             </Eyebrow>
-            <h2 className="font-batica-bold text-heading-md font-extrabold tracking-wide whitespace-pre-line text-white sm:text-heading-lg">
+            <h2 className="font-batica text-heading-md font-extrabold tracking-wide whitespace-pre-line text-white sm:text-heading-lg">
               {WHY_SURD.title}
             </h2>
           </div>

@@ -113,7 +113,7 @@ export function ProductsSection() {
                   {product.eyebrow}
                 </Eyebrow>
                 <h3
-                  className={`${tone.text} text-heading-md tracking-wide font-batica-bold`}
+                  className={`${tone.text} text-heading-md tracking-wide font-batica font-bold`}
                 >
                   {product.title}
                 </h3>

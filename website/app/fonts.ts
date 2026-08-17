@@ -13,8 +13,12 @@ export const geistMono = Geist_Mono({
   display: "swap",
 });
 
+/* Batica Sans ships as a variable face (wght 300–900), so a single file covers
+   every weight the design uses — no faux-bolding with -webkit-text-stroke. */
 export const baticaSans = localFont({
-  src: "./fonts/batica-sans.regular.otf",
+  src: "./fonts/BaticaSans-VF.woff2",
+  weight: "300 900",
+  style: "normal",
   variable: "--font-batica-sans",
   display: "swap",
 });
