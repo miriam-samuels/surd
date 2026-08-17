@@ -1,0 +1,658 @@
+@import "tailwindcss";
+
+
+/* Dark mode: follows the OS by default; `.dark` / `.light` on <html> override it. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not(.light, .light *)) {
+      @slot;
+    }
+  }
+}
+
+
+@theme static {
+  /* ---- Color ---- */
+  --color-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-inherit: inherit;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Brand */
+  --color-surd-blue-50: #e6f0ff;
+  --color-surd-blue-100: #b0d0ff;
+  --color-surd-blue-200: #8ab9ff;
+  --color-surd-blue-300: #5498ff;
+  --color-surd-blue-400: #3385ff;
+  --color-surd-blue-500: #0066ff;
+  --color-surd-blue-600: #005de8;
+  --color-surd-blue-700: #0048b5;
+  --color-surd-blue-800: #00388c;
+  --color-surd-blue-900: #002b6b;
+
+  /* Grey */
+  --color-grey-10: #fafafa;
+  --color-grey-25: #f7f7f7;
+  --color-grey-50: #e8e8e8;
+  --color-grey-100: #d9d9d9; /* not on the colour board; used by component borders */
+  --color-grey-150: #cbcbcb;
+  --color-grey-200: #bcbcbc;
+  --color-grey-300: #9e9e9e;
+  --color-grey-400: #818181;
+  --color-grey-500: #636363;
+  --color-grey-600: #4f4f4f;
+  --color-grey-700: #3b3b3b;
+  --color-grey-800: #282828;
+  --color-grey-850: #1e1e1e;
+  --color-grey-900: #1a1a1a;
+  --color-grey-950: #141414;
+  --color-grey-1000: #0a0a0a;
+
+  /* Green */
+  --color-green-50: #e5fbec;
+  --color-green-100: #ccf7d9;
+  --color-green-150: #b2f3c7;
+  --color-green-200: #99efb4;
+  --color-green-300: #66e78e;
+  --color-green-400: #33df69;
+  --color-green-500: #00d743;
+  --color-green-600: #00ac36;
+  --color-green-700: #008128;
+  --color-green-800: #00561b;
+  --color-green-850: #004114;
+  --color-green-900: #002b0d;
+  --color-green-950: #001607;
+
+  /* Aqua */
+  --color-aqua-50: #ebfbfc;
+  --color-aqua-100: #d7f6f9;
+  --color-aqua-150: #c4f2f5;
+  --color-aqua-200: #b0eef2;
+  --color-aqua-300: #88e5ec;
+  --color-aqua-400: #61dde5;
+  --color-aqua-500: #39d4df;
+  --color-aqua-600: #2eaab2;
+  --color-aqua-700: #227f86;
+  --color-aqua-800: #175559;
+  --color-aqua-850: #114043;
+  --color-aqua-900: #0b2a2d;
+  --color-aqua-950: #061516;
+
+  /* Blue */
+  --color-blue-50: #e9f5ff;
+  --color-blue-100: #d3ecff;
+  --color-blue-150: #bde2ff;
+  --color-blue-200: #a7d8ff;
+  --color-blue-300: #7ac5ff;
+  --color-blue-400: #4eb1ff;
+  --color-blue-500: #229eff;
+  --color-blue-600: #1b7ecc;
+  --color-blue-700: #145f99;
+  --color-blue-800: #0e3f66;
+  --color-blue-850: #0a2f4d;
+  --color-blue-900: #072033;
+  --color-blue-950: #03101a;
+
+  /* Purple */
+  --color-purple-50: #f4eeff;
+  --color-purple-100: #eaddff;
+  --color-purple-150: #dfccfe;
+  --color-purple-200: #d4bbfe;
+  --color-purple-300: #bf99fe;
+  --color-purple-400: #a977fd;
+  --color-purple-500: #9455fd;
+  --color-purple-600: #7a44d3;
+  --color-purple-700: #5f33a9;
+  --color-purple-800: #45227e;
+  --color-purple-850: #381a69;
+  --color-purple-900: #2a1154;
+  --color-purple-950: #1d093f;
+
+  /* Pink */
+  --color-pink-50: #feedff;
+  --color-pink-100: #fcdbff;
+  --color-pink-150: #fbc9ff;
+  --color-pink-200: #f9b7ff;
+  --color-pink-300: #f794ff;
+  --color-pink-400: #f470ff;
+  --color-pink-500: #f14cff;
+  --color-pink-600: #c73dd3;
+  --color-pink-700: #9d2ea7;
+  --color-pink-800: #741e7b;
+  --color-pink-850: #5f1765;
+  --color-pink-900: #4a0f4f;
+  --color-pink-950: #350839;
+
+  /* Red */
+  --color-red-50: #ffebea;
+  --color-red-100: #ffd8d6;
+  --color-red-150: #ffc4c1;
+  --color-red-200: #ffb1ac;
+  --color-red-300: #ff8983;
+  --color-red-400: #ff6259;
+  --color-red-500: #ff3b30;
+  --color-red-600: #cd2f26;
+  --color-red-700: #9c231d;
+  --color-red-800: #6a1813;
+  --color-red-850: #51120e;
+  --color-red-900: #390c0a;
+  --color-red-950: #200605;
+
+  /* Orange */
+  --color-orange-50: #fcf3e5;
+  --color-orange-100: #fae7cc;
+  --color-orange-150: #f7dbb2;
+  --color-orange-200: #f5cf99;
+  --color-orange-300: #efb666;
+  --color-orange-400: #ea9e33;
+  --color-orange-500: #e58600;
+  --color-orange-600: #b76b00;
+  --color-orange-700: #895000;
+  --color-orange-800: #5c3600;
+  --color-orange-850: #452800;
+  --color-orange-900: #2e1b00;
+  --color-orange-950: #170d00;
+
+  /* Yellow */
+  --color-yellow-50: #fff7e5;
+  --color-yellow-100: #fff0cc;
+  --color-yellow-150: #ffe8b2;
+  --color-yellow-200: #ffe199;
+  --color-yellow-300: #ffd266;
+  --color-yellow-400: #ffc333;
+  --color-yellow-500: #ffb400;
+  --color-yellow-600: #cc9000;
+  --color-yellow-700: #996c00;
+  --color-yellow-800: #664800;
+  --color-yellow-850: #4d3600;
+  --color-yellow-900: #332400;
+  --color-yellow-950: #1a1200;
+
+  /* ---- Typeface ---- */
+  --font-*: initial;
+  --font-sans:
+    var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), var(--font-sans);
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Type scale ----
+     Sizes carry line-height + tracking. Weight is left to `font-*` utilities
+     except on Paragraph (always 400) and Label (always 800). */
+  --text-*: initial;
+
+  /* Display */
+  --text-display-lg: 11.25rem; /* 180px */
+  --text-display-lg--line-height: 11.75rem; /* 188px */
+  --text-display-lg--letter-spacing: -0.05em;
+  --text-display-md: 8rem; /* 128px */
+  --text-display-md--line-height: 8.5rem; /* 136px */
+  --text-display-md--letter-spacing: -0.04em;
+  --text-display-sm: 6rem; /* 96px */
+  --text-display-sm--line-height: 6.5rem; /* 104px */
+  --text-display-sm--letter-spacing: -0.03em;
+
+  /* Heading */
+  --text-heading-2xl: 4.5rem; /* 72px */
+  --text-heading-2xl--line-height: 5rem; /* 80px */
+  --text-heading-2xl--letter-spacing: -0.02em;
+  --text-heading-xl: 3.75rem; /* 60px */
+  --text-heading-xl--line-height: 4.25rem; /* 68px */
+  --text-heading-xl--letter-spacing: -0.018em;
+  --text-heading-lg: 3rem; /* 48px */
+  --text-heading-lg--line-height: 3.5rem; /* 56px */
+  --text-heading-lg--letter-spacing: -0.016em;
+  --text-heading-md: 2.25rem; /* 36px */
+  --text-heading-md--line-height: 2.75rem; /* 44px */
+  --text-heading-md--letter-spacing: -0.014em;
+  --text-heading-sm: 1.875rem; /* 30px */
+  --text-heading-sm--line-height: 2.375rem; /* 38px */
+  --text-heading-sm--letter-spacing: -0.013em;
+  --text-heading-xs: 1.5rem; /* 24px */
+  --text-heading-xs--line-height: 2rem; /* 32px */
+  --text-heading-xs--letter-spacing: -0.012em;
+
+  /* Text — UI copy, buttons, table cells, form labels */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-2xl--line-height: 2rem; /* 32px */
+  --text-2xl--letter-spacing: -0.012em;
+  --text-xl: 1.25rem; /* 20px */
+  --text-xl--line-height: 1.75rem; /* 28px */
+  --text-xl--letter-spacing: -0.01em;
+  --text-lg: 1.125rem; /* 18px */
+  --text-lg--line-height: 1.5rem; /* 24px */
+  --text-lg--letter-spacing: -0.008em;
+  --text-md: 1rem; /* 16px */
+  --text-md--line-height: 1.375rem; /* 22px */
+  --text-md--letter-spacing: -0.007em;
+  --text-sm: 0.875rem; /* 14px */
+  --text-sm--line-height: 1.25rem; /* 20px */
+  --text-sm--letter-spacing: -0.006em;
+  --text-xs: 0.75rem; /* 12px */
+  --text-xs--line-height: 1rem; /* 16px */
+  --text-xs--letter-spacing: -0.005em;
+  --text-2xs: 0.625rem; /* 10px */
+  --text-2xs--line-height: 0.875rem; /* 14px */
+  --text-2xs--letter-spacing: -0.004em;
+
+  /* Paragraph — long-form prose, always Regular with a 1.6 leading */
+  --text-paragraph-2xl: 1.5rem; /* 24px */
+  --text-paragraph-2xl--line-height: 1.6;
+  --text-paragraph-2xl--letter-spacing: 0em;
+  --text-paragraph-2xl--font-weight: 400;
+  --text-paragraph-xl: 1.25rem; /* 20px */
+  --text-paragraph-xl--line-height: 1.6;
+  --text-paragraph-xl--letter-spacing: 0em;
+  --text-paragraph-xl--font-weight: 400;
+  --text-paragraph-lg: 1.125rem; /* 18px */
+  --text-paragraph-lg--line-height: 1.6;
+  --text-paragraph-lg--letter-spacing: 0em;
+  --text-paragraph-lg--font-weight: 400;
+  --text-paragraph-md: 1rem; /* 16px */
+  --text-paragraph-md--line-height: 1.6;
+  --text-paragraph-md--letter-spacing: 0em;
+  --text-paragraph-md--font-weight: 400;
+  --text-paragraph-sm: 0.875rem; /* 14px */
+  --text-paragraph-sm--line-height: 1.6;
+  --text-paragraph-sm--letter-spacing: 0em;
+  --text-paragraph-sm--font-weight: 400;
+  --text-paragraph-xs: 0.75rem; /* 12px */
+  --text-paragraph-xs--line-height: 1.6;
+  --text-paragraph-xs--letter-spacing: 0em;
+  --text-paragraph-xs--font-weight: 400;
+
+  /* Label — eyebrows and overlines. ExtraBold, 10% tracking, set uppercase. */
+  --text-label-2xl: 1.25rem; /* 20px */
+  --text-label-2xl--line-height: 1.75rem; /* 28px */
+  --text-label-2xl--letter-spacing: 0.1em;
+  --text-label-2xl--font-weight: 800;
+  --text-label-xl: 1.125rem; /* 18px */
+  --text-label-xl--line-height: 1.5rem; /* 24px */
+  --text-label-xl--letter-spacing: 0.1em;
+  --text-label-xl--font-weight: 800;
+  --text-label-lg: 1rem; /* 16px */
+  --text-label-lg--line-height: 1.375rem; /* 22px */
+  --text-label-lg--letter-spacing: 0.1em;
+  --text-label-lg--font-weight: 800;
+  --text-label-md: 0.875rem; /* 14px */
+  --text-label-md--line-height: 1.25rem; /* 20px */
+  --text-label-md--letter-spacing: 0.1em;
+  --text-label-md--font-weight: 800;
+  --text-label-sm: 0.75rem; /* 12px */
+  --text-label-sm--line-height: 1rem; /* 16px */
+  --text-label-sm--letter-spacing: 0.1em;
+  --text-label-sm--font-weight: 800;
+  --text-label-xs: 0.625rem; /* 10px */
+  --text-label-xs--line-height: 0.875rem; /* 14px */
+  --text-label-xs--letter-spacing: 0.1em;
+  --text-label-xs--font-weight: 800;
+
+  /* ---- Elevation ---- */
+  --shadow-*: initial;
+  --shadow-xs: 0 1px 2px 0 rgb(23 23 23 / 0.05);
+  --shadow-sm:
+    0 1px 2px 0 rgb(23 23 23 / 0.06), 0 1px 3px 0 rgb(23 23 23 / 0.1);
+  --shadow-md:
+    0 2px 4px -2px rgb(23 23 23 / 0.06), 0 4px 8px -2px rgb(23 23 23 / 0.1);
+  --shadow-lg:
+    0 4px 6px -2px rgb(16 24 40 / 0.03), 0 12px 16px -4px rgb(16 24 40 / 0.08);
+  --shadow-xl:
+    0 8px 8px -4px rgb(23 23 23 / 0.03), 0 20px 24px -4px rgb(23 23 23 / 0.08);
+  --shadow-2xl: 0 24px 48px -12px rgb(23 23 23 / 0.18);
+
+  /* ---- Focus rings ----
+     Applied as a box-shadow so they stack cleanly on top of borders:
+       focus-visible:shadow-ring-primary focus-visible:outline-none */
+  --shadow-ring-primary: 0 0 0 4px rgb(0 102 255 / 0.25);
+  --shadow-ring-brand: 0 0 0 4px rgb(79 70 229 / 0.25);
+  --shadow-ring-black: 0 0 0 4px rgb(42 47 65 / 0.25);
+  --shadow-ring-white: 0 0 0 4px rgb(255 255 255 / 0.25);
+  --shadow-ring-gray: 0 0 0 4px rgb(100 116 139 / 0.25);
+  --shadow-ring-blue: 0 0 0 4px rgb(59 130 246 / 0.25);
+  --shadow-ring-purple: 0 0 0 4px rgb(147 51 234 / 0.25);
+  --shadow-ring-success: 0 0 0 4px rgb(34 197 94 / 0.25);
+  --shadow-ring-destructive: 0 0 0 4px rgb(239 68 68 / 0.25);
+
+  /* ---- Blur ----
+     `blur-*` blurs the layer itself, `backdrop-blur-*` blurs what's behind it. */
+  --blur-*: initial;
+  --blur-xs: 4px;
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 32px;
+  --blur-xl: 64px;
+
+  /* ---- Border Radius ---- */
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-2xl: 1rem; /* 16px */
+  --radius-3xl: 1.5rem; /* 24px */
+  --radius-4xl: 2rem; /* 32px */
+  --radius-5xl: 2.5rem; /* 40px */
+  --radius-6xl: 3rem; /* 48px */
+  --radius-7xl: 5rem; /* 64px */
+
+  /* ---- Icon sizing (Hugeicons) ---- */
+  --size-icon-xs: 1rem; /* 16px */
+  --size-icon-sm: 1.25rem; /* 20px */
+  --size-icon-md: 1.5rem; /* 24px */
+  --size-icon-lg: 2rem; /* 32px */
+  --size-icon-xl: 2.5rem; /* 40px */
+}
+
+/* --------------------------------------------------------------------------
+   2. Semantic tokens
+   What components should actually reference. The grey ramp mirrors between
+   themes exactly as the Figma color board shows it: grey-10 is the lightest
+   surface in light mode and the darkest surface in dark mode.
+   -------------------------------------------------------------------------- */
+:root {
+  --background: var(--color-grey-10);
+  --background-subtle: var(--color-grey-25);
+  --surface: var(--color-white);
+  --surface-raised: var(--color-white);
+  --surface-sunken: var(--color-grey-25);
+  --surface-inverse: var(--color-grey-1000);
+
+  --foreground: var(--color-grey-1000);
+  --foreground-muted: var(--color-grey-500);
+  --foreground-subtle: var(--color-grey-400);
+  --foreground-inverse: var(--color-grey-10);
+
+  --border: var(--color-grey-50);
+  --border-strong: var(--color-grey-150);
+
+  --primary: var(--color-surd-blue-500);
+  --primary-hover: var(--color-surd-blue-600);
+  --primary-active: var(--color-surd-blue-700);
+  --primary-foreground: var(--color-white);
+  --primary-subtle: var(--color-surd-blue-50);
+  --primary-subtle-foreground: var(--color-surd-blue-700);
+
+  --success: var(--color-green-600);
+  --success-foreground: var(--color-white);
+  --success-subtle: var(--color-green-50);
+  --success-subtle-foreground: var(--color-green-800);
+
+  --warning: var(--color-orange-500);
+  --warning-foreground: var(--color-white);
+  --warning-subtle: var(--color-orange-50);
+  --warning-subtle-foreground: var(--color-orange-800);
+
+  --danger: var(--color-red-500);
+  --danger-foreground: var(--color-white);
+  --danger-subtle: var(--color-red-50);
+  --danger-subtle-foreground: var(--color-red-800);
+
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-white);
+  --info-subtle: var(--color-blue-50);
+  --info-subtle-foreground: var(--color-blue-800);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: var(--color-grey-1000);
+    --background-subtle: var(--color-grey-950);
+    --surface: var(--color-grey-950);
+    --surface-raised: var(--color-grey-900);
+    --surface-sunken: var(--color-black);
+    --surface-inverse: var(--color-grey-10);
+
+    --foreground: var(--color-grey-10);
+    --foreground-muted: var(--color-grey-400);
+    --foreground-subtle: var(--color-grey-500);
+    --foreground-inverse: var(--color-grey-1000);
+
+    --border: var(--color-grey-800);
+    --border-strong: var(--color-grey-700);
+
+    --primary: var(--color-surd-blue-500);
+    --primary-hover: var(--color-surd-blue-400);
+    --primary-active: var(--color-surd-blue-300);
+    --primary-foreground: var(--color-white);
+    --primary-subtle: var(--color-surd-blue-900);
+    --primary-subtle-foreground: var(--color-surd-blue-100);
+
+    --success: var(--color-green-500);
+    --success-foreground: var(--color-green-950);
+    --success-subtle: var(--color-green-950);
+    --success-subtle-foreground: var(--color-green-200);
+
+    --warning: var(--color-orange-400);
+    --warning-foreground: var(--color-orange-950);
+    --warning-subtle: var(--color-orange-950);
+    --warning-subtle-foreground: var(--color-orange-200);
+
+    --danger: var(--color-red-400);
+    --danger-foreground: var(--color-red-950);
+    --danger-subtle: var(--color-red-950);
+    --danger-subtle-foreground: var(--color-red-200);
+
+    --info: var(--color-blue-400);
+    --info-foreground: var(--color-blue-950);
+    --info-subtle: var(--color-blue-950);
+    --info-subtle-foreground: var(--color-blue-200);
+
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  --background: var(--color-grey-1000);
+  --background-subtle: var(--color-grey-950);
+  --surface: var(--color-grey-950);
+  --surface-raised: var(--color-grey-900);
+  --surface-sunken: var(--color-black);
+  --surface-inverse: var(--color-grey-10);
+
+  --foreground: var(--color-grey-10);
+  --foreground-muted: var(--color-grey-400);
+  --foreground-subtle: var(--color-grey-500);
+  --foreground-inverse: var(--color-grey-1000);
+
+  --border: var(--color-grey-800);
+  --border-strong: var(--color-grey-700);
+
+  --primary: var(--color-surd-blue-500);
+  --primary-hover: var(--color-surd-blue-400);
+  --primary-active: var(--color-surd-blue-300);
+  --primary-foreground: var(--color-white);
+  --primary-subtle: var(--color-surd-blue-900);
+  --primary-subtle-foreground: var(--color-surd-blue-100);
+
+  --success: var(--color-green-500);
+  --success-foreground: var(--color-green-950);
+  --success-subtle: var(--color-green-950);
+  --success-subtle-foreground: var(--color-green-200);
+
+  --warning: var(--color-orange-400);
+  --warning-foreground: var(--color-orange-950);
+  --warning-subtle: var(--color-orange-950);
+  --warning-subtle-foreground: var(--color-orange-200);
+
+  --danger: var(--color-red-400);
+  --danger-foreground: var(--color-red-950);
+  --danger-subtle: var(--color-red-950);
+  --danger-subtle-foreground: var(--color-red-200);
+
+  --info: var(--color-blue-400);
+  --info-foreground: var(--color-blue-950);
+  --info-subtle: var(--color-blue-950);
+  --info-subtle-foreground: var(--color-blue-200);
+
+  color-scheme: dark;
+}
+
+/* Expose the semantic tokens as Tailwind color utilities. `inline` keeps the
+   var() reference in the utility so it re-resolves when the theme flips. */
+@theme inline {
+  --color-background: var(--background);
+  --color-background-subtle: var(--background-subtle);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-foreground-inverse: var(--foreground-inverse);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-foreground: var(--primary-subtle-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-subtle-foreground: var(--success-subtle-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-subtle-foreground: var(--warning-subtle-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-subtle-foreground: var(--danger-subtle-foreground);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-subtle-foreground: var(--info-subtle-foreground);
+}
+
+/* --------------------------------------------------------------------------
+   3. Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    line-height: var(--text-md--line-height);
+    letter-spacing: var(--text-md--letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    width: 100vw;
+    padding:0 1rem;
+    overflow-x: hidden;
+  }
+
+  @media (min-width: 1400px) {
+    body {
+      padding:0;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Utilities
+   -------------------------------------------------------------------------- */
+
+@utility font-batica {
+  font-family: var(--font-batica-sans), var(--font-sans);
+}
+@utility font-batica-medium {
+  font-family: var(--font-batica-sans), var(--font-sans);
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+@utility font-batica-bold {
+  font-family: var(--font-batica-sans), var(--font-sans);
+  -webkit-text-stroke: 1.9px currentColor;
+}
+
+@utility font-batica-extrabold {
+  font-family: var(--font-batica-sans), var(--font-sans);
+  -webkit-text-stroke: 3px currentColor;
+}
+/* --------------------------------------------------------------------------
+   5. Motion
+   -------------------------------------------------------------------------- */
+
+/* Radix sets --radix-accordion-content-height so panels can animate to auto. */
+@theme static {
+  --animate-accordion-down: accordion-down 200ms ease-out;
+  --animate-accordion-up: accordion-up 200ms ease-out;
+  --animate-marquee: marquee 32s linear infinite;
+  /* The testimonial cards are much wider than the goal pills, so the same
+     travel distance needs a longer turn to read at the same speed. */
+  --animate-marquee-slow: marquee 70s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* The track holds two identical passes, so half a turn wraps seamlessly. */
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The loading shimmer (lib/image-placeholder.ts) is an SVG that next/image
+     sets as the image's own background, and the rule above cannot reach into
+     it — a background SVG animates in its own context, which never sees this
+     preference. Drop the artwork and leave the flat panel behind instead. The
+     selector matches the sweep's class name inside the encoded data URL, and
+     stops matching the moment next/image clears the placeholder. */
+  img[style*="sweep"] {
+    background-image: none !important;
+    background-color: rgb(128 128 128 / 0.14);
+  }
+}
