@@ -5,21 +5,11 @@ import { Avatar, type AvatarSize } from "@/components/ui/avatar";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * A row of overlapping avatars.
- *
- * Pass the full list of people; `max` controls how many render before the rest
- * collapse into a "+N" chip. Setting `onAdd` appends a dashed add button.
- *
- *   <AvatarGroup people={team} max={5} size="md" onAdd={invite} />
- */
-
 export type AvatarGroupPerson = {
   name: string;
   src?: string;
 };
 
-/** Overlap and ring thickness scale with the avatar so the row stays even. */
 const overlaps: Record<AvatarSize, string> = {
   xs: "-ml-2",
   sm: "-ml-2.5",
@@ -41,9 +31,9 @@ const chipSizes: Record<AvatarSize, { box: number; text: string }> = {
 type AvatarGroupProps = Omit<React.ComponentProps<"div">, "children"> & {
   people: AvatarGroupPerson[];
   size?: AvatarSize;
-  /** How many avatars to show before collapsing the remainder into "+N". */
+
   max?: number;
-  /** Renders a dashed add button after the group when provided. */
+
   onAdd?: () => void;
   addLabel?: string;
 };

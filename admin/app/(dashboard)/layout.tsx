@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { RequireSession } from "@/components/auth/require-session";
 
 export const metadata: Metadata = {
   title: {
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: LayoutProps<"/">) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <RequireSession>
+      <DashboardShell>{children}</DashboardShell>
+    </RequireSession>
+  );
 }

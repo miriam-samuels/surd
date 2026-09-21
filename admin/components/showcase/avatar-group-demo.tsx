@@ -3,10 +3,6 @@
 import { AvatarGroup, type AvatarGroupPerson } from "@/components/ui/avatar-group";
 import { Specimen } from "@/components/showcase/specimen";
 
-/**
- * Gallery-only wrapper. `AvatarGroup`'s add button takes a callback, which a
- * server component cannot pass, so the demo supplies one from the client.
- */
 export function AvatarGroupDemo({ people }: { people: AvatarGroupPerson[] }) {
   const noop = () => {};
 

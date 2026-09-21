@@ -8,16 +8,6 @@ import { Icon } from "@/components/ui/icon";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { cn } from "@/lib/cn";
 
-/**
- * Two presentations of the same navigation.
- *
- * `Sidebar` is the persistent rail from `lg` up; it collapses to an icon strip.
- * `SidebarDrawer` is the overlay used below `lg`, built on a Radix dialog so
- * focus trapping and scroll locking come for free.
- *
- * Both render `SidebarNav`, so there is only ever one list to maintain.
- */
-
 const EXPANDED_WIDTH = "w-64";
 const COLLAPSED_WIDTH = "w-18";
 

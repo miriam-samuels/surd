@@ -4,26 +4,11 @@ import { Tabs as RadixTabs } from "radix-ui";
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * Two tab treatments, both Radix-backed so keyboard navigation and ARIA come
- * for free:
- *
- * `variant="underline"` — the page-level tabs on a record (Balances, Profile,
- * Account…). The strip scrolls horizontally on narrow screens.
- *
- * `variant="pill"` — the inline segmented switch inside a card (Templates /
- * Fees & Charges, Target Savings / Fixed Deposits).
- *
- *   <Tabs items={USER_TABS} value={tab} onValueChange={setTab}>
- *     <TabPanel value="profile"><ProfileCard … /></TabPanel>
- *   </Tabs>
- */
-
 export type TabItem = {
   value: string;
   label: string;
   icon?: IconSvgElement;
-  /** Count rendered after the label. */
+
   badge?: number;
 };
 
@@ -33,6 +18,14 @@ type TabsProps = {
   defaultValue?: string;
   onValueChange?: (value: string) => void;
   variant?: "underline" | "pill";
+
+  /**
+   * Rendered on the row the tabs sit on, pushed to its end — the design puts
+   * "New Template" beside the Templates/Fees pills rather than under them, and
+   * Radix requires the List to be a child of Root, so the slot has to live
+   * here rather than in the caller's markup.
+   */
+  action?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
   listClassName?: string;
@@ -44,6 +37,7 @@ export function Tabs({
   defaultValue,
   onValueChange,
   variant = "underline",
+  action,
   children,
   className,
   listClassName,
@@ -57,10 +51,19 @@ export function Tabs({
       onValueChange={onValueChange}
       className={cn("flex flex-col", className)}
     >
+      <div
+        className={cn(
+          "flex shrink-0 flex-wrap items-center gap-3",
+          action ? "justify-between" : null,
+        )}
+      >
       <RadixTabs.List
         className={cn(
           "flex shrink-0 items-center overflow-x-auto",
-          isPill ? "gap-3" : "gap-1 border-b border-grey-50",
+          /* No rule under the row: the design carries the active tab on its own
+             indicator, and a full-width divider inside a panel reads as a
+             section break the content does not have. */
+          isPill ? "gap-3" : "gap-6",
           listClassName,
         )}
       >
@@ -78,9 +81,11 @@ export function Tabs({
                     "data-[state=active]:bg-surd-blue-50 data-[state=active]:text-primary",
                   )
                 : cn(
-                    "relative px-4 pb-3 pt-2 text-md text-grey-400 hover:text-grey-900",
+                    /* Flush, so the first label lines up with the content under
+                       it rather than sitting a padding-width to its right. */
+                    "relative pb-3 text-md text-grey-400 hover:text-grey-900",
                     "data-[state=active]:text-primary",
-                    "after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full",
+                    "after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-full",
                     "data-[state=active]:after:bg-primary",
                   ),
             )}
@@ -95,6 +100,9 @@ export function Tabs({
           </RadixTabs.Trigger>
         ))}
       </RadixTabs.List>
+
+        {action}
+      </div>
 
       {children}
     </RadixTabs.Root>

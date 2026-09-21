@@ -4,19 +4,10 @@ import type { Currency, Editor } from "@/content/configuration";
 import { CURRENCY_COUNTRY } from "@/content/configuration";
 import { cn } from "@/lib/cn";
 
-/**
- * Small cells that repeat across the configuration tables.
- *
- * They live here rather than in each page so a change to how an editor or a
- * currency renders lands everywhere at once.
- */
-
-/** "Last updated by" — avatar, name and email. */
 export function EditorCell({ editor }: { editor: Editor }) {
   return <AvatarLabel name={editor.name} caption={editor.email} size="sm" />;
 }
 
-/** A currency chip: flag plus code, optionally with a trailing value. */
 export function CurrencyChip({
   currency,
   suffix,
@@ -29,7 +20,7 @@ export function CurrencyChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-grey-25 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-grey-900",
+        "inline-flex items-center gap-1.5 rounded-full  px-2.5 py-1 text-sm font-normal whitespace-nowrap text-grey-900",
         className,
       )}
     >
@@ -40,7 +31,6 @@ export function CurrencyChip({
   );
 }
 
-/** A row of currency chips, as used in the templates and fees tables. */
 export function CurrencyChips({
   currencies,
   suffix,

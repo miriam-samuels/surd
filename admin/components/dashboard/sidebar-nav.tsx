@@ -1,25 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
 import { SIDEBAR_GROUPS, type NavGroup, type NavItem } from "@/content/navigation";
+import { usePermissions } from "@/contexts/permissions";
 import { cn } from "@/lib/cn";
-
-/**
- * The navigation list shared by the desktop rail and the mobile drawer.
- *
- * Each titled group is a collapse toggle, per the design's chevrons. Groups
- * start open and the state is per-session — a signed-in admin lives on two or
- * three of these sections, so remembering the choice matters less than the
- * list staying predictable between visits.
- *
- * `collapsed` shrinks the whole rail to icons only. Group headings become a
- * hairline in that mode so the sections still read as separate, and every
- * label falls back to a native tooltip via `title`.
- */
 
 export function SidebarNav({
   collapsed = false,
@@ -29,10 +17,24 @@ export function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { can, loading } = usePermissions();
+
+  const groups = useMemo(
+    () =>
+      SIDEBAR_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) => !item.permission || can(item.permission),
+        ),
+      })).filter((group) => group.items.length > 0),
+    [can],
+  );
+
+  if (loading) return <NavSkeleton />;
 
   return (
     <nav aria-label="Admin sections" className="flex flex-col gap-5">
-      {SIDEBAR_GROUPS.map((group) => (
+      {groups.map((group) => (
         <NavSection
           key={group.id}
           group={group}
@@ -57,7 +59,7 @@ function NavSection({
   onNavigate?: () => void;
 }) {
   const [open, setOpen] = useState(true);
-  /* A collapsed rail has no room for headings, so nothing can be folded away. */
+
   const showItems = open || collapsed;
 
   return (
@@ -100,7 +102,6 @@ function NavSection({
   );
 }
 
-/** `/users` should stay lit on `/users/42`, but `/` must not match everything. */
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -127,7 +128,7 @@ function SidebarLink({
         "outline-none transition-colors focus-visible:shadow-ring-primary",
         collapsed && "justify-center px-0",
         active
-          ? /* The animated ring lives here — see `rotating-border` in globals.css. */
+          ?
             "rotating-border font-semibold text-primary"
           : "text-grey-800 hover:bg-grey-25 hover:text-grey-900",
       )}
@@ -153,7 +154,6 @@ function SidebarLink({
   );
 }
 
-/** Collapse chevron used by the group headers, and elsewhere in the console. */
 export function GroupChevron({ open }: { open: boolean }) {
   return (
     <Icon
@@ -164,5 +164,15 @@ export function GroupChevron({ open }: { open: boolean }) {
         open && "rotate-180",
       )}
     />
+  );
+}
+
+function NavSkeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-3" aria-hidden>
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="h-9 rounded-lg bg-grey-50" />
+      ))}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft02Icon,
   ArrowRight02Icon,
@@ -9,44 +9,21 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  DEFAULT_PAGE_SIZE,
   PAGE_ELLIPSIS,
   PAGE_SIZE_OPTIONS,
   usePagination,
 } from "@/hooks/use-pagination";
 import { cn } from "@/lib/cn";
 
-/**
- * The console's table.
- *
- * Columns are declared as data so a row is never hand-written twice:
- *
- *   const columns: Column<Rate>[] = [
- *     { id: "pair", header: "Currency Pair", cell: (rate) => <Pair {...rate} /> },
- *     { id: "value", header: "Value", cell: (rate) => rate.value, align: "right" },
- *   ];
- *
- *   <DataTable data={rates} columns={columns} getRowId={(rate) => rate.id} />
- *
- * ## Pagination
- *
- * **Static** (default) — hand it the whole array and it slices per page.
- *
- * **Dynamic** — pass `pagination={{ mode: "server", page, pageSize, totalItems,
- * onPageChange, onPageSizeChange }}` and render only the current page's rows.
- * The pager reports intent; fetching stays with the caller.
- *
- * Pass `pagination={false}` to render every row with no footer.
- */
-
 export type Column<T> = {
-  /** Stable key; also the React key for the cell. */
   id: string;
   header: React.ReactNode;
   cell: (row: T) => React.ReactNode;
   align?: "left" | "right" | "center";
-  /** Applied to both the header cell and every body cell in the column. */
+
   className?: string;
-  /** e.g. "w-40" or "min-w-64" to stop a column collapsing. */
+
   width?: string;
 };
 
@@ -63,14 +40,14 @@ type DataTableProps<T> = {
   data: T[];
   columns: Column<T>[];
   getRowId: (row: T) => string;
-  /** `false` disables paging; omit for client-side; object for server-side. */
+
   pagination?: false | ServerPagination;
   initialPageSize?: number;
   onRowClick?: (row: T) => void;
   isLoading?: boolean;
-  /** Rendered in place of the table when there is nothing to show. */
+
   emptyState?: React.ReactNode;
-  /** Minimum table width before the container scrolls horizontally. */
+
   minWidth?: string;
   className?: string;
 };
@@ -86,7 +63,7 @@ export function DataTable<T>({
   columns,
   getRowId,
   pagination,
-  initialPageSize = 20,
+  initialPageSize = DEFAULT_PAGE_SIZE,
   onRowClick,
   isLoading = false,
   emptyState,
@@ -101,11 +78,13 @@ export function DataTable<T>({
     initialPageSize,
   });
 
-  /* Server mode already sends one page; client mode slices locally. */
   const rows = useMemo(() => {
     if (!isPaged || isServer) return data;
     return data.slice(client.range[0], client.range[1]);
   }, [data, isPaged, isServer, client.range]);
+
+  const scroller = useRef<HTMLDivElement>(null);
+  const scroll = useHorizontalScroll(scroller, rows.length);
 
   if (isLoading) {
     return (
@@ -121,8 +100,8 @@ export function DataTable<T>({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {/* Tables scroll inside their own container so the page never does. */}
-      <div className="overflow-x-auto">
+
+      <div ref={scroller} className="overflow-x-auto">
         <table className={cn("w-full border-collapse text-sm", minWidth)}>
           <thead>
             <tr className="border-b border-grey-50">
@@ -131,7 +110,7 @@ export function DataTable<T>({
                   key={column.id}
                   scope="col"
                   className={cn(
-                    "px-3 py-3 text-xs font-semibold whitespace-nowrap text-grey-400",
+                    "px-3 py-3 text-sm font-medium whitespace-nowrap text-grey-400",
                     alignments[column.align ?? "left"],
                     column.width,
                     column.className,
@@ -171,6 +150,26 @@ export function DataTable<T>({
         </table>
       </div>
 
+      {/* Every one of these tables is wider than its panel, and the only sign
+          of that today is the cut-off column at the right edge. The indicator
+          reports the position rather than driving it — the table itself is the
+          scroll surface, and a second draggable control competing with it is a
+          bug waiting to happen. */}
+      {scroll.scrollable ? (
+        <div
+          aria-hidden
+          className="mx-auto mt-4 h-1 w-64 overflow-hidden rounded-full bg-grey-50"
+        >
+          <div
+            className="h-full rounded-full bg-primary transition-[margin] duration-75"
+            style={{
+              width: `${scroll.ratio * 100}%`,
+              marginLeft: `${scroll.offset * (100 - scroll.ratio * 100)}%`,
+            }}
+          />
+        </div>
+      ) : null}
+
       {isPaged ? (
         <Pagination
           page={isServer ? pagination.page : client.page}
@@ -186,7 +185,49 @@ export function DataTable<T>({
   );
 }
 
-/* -------------------------------------------------------------- pagination */
+/**
+ * How much of the table is on screen, and where that window sits.
+ *
+ * `ratio` is the visible fraction and doubles as the "is there anything to
+ * scroll" test; `offset` is 0 at the left edge and 1 at the right, so the thumb
+ * lands flush at both ends rather than stopping short of the second.
+ */
+function useHorizontalScroll(
+  ref: React.RefObject<HTMLDivElement | null>,
+  rowCount: number,
+) {
+  const [scroll, setScroll] = useState({ ratio: 1, offset: 0 });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const update = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = element;
+      const overflow = scrollWidth - clientWidth;
+
+      setScroll({
+        ratio: scrollWidth > 0 ? Math.min(1, clientWidth / scrollWidth) : 1,
+        offset: overflow > 0 ? scrollLeft / overflow : 0,
+      });
+    };
+
+    update();
+    element.addEventListener("scroll", update, { passive: true });
+
+    /* Columns can change width after the rows land — an avatar loading, a long
+       reference — so the width is watched rather than measured once. */
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+
+    return () => {
+      element.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [ref, rowCount]);
+
+  return { ...scroll, scrollable: scroll.ratio < 0.999 };
+}
 
 type PaginationProps = {
   page: number;
@@ -285,26 +326,18 @@ const arrowClass = cn(
 );
 
 /**
- * `1 2 3 … 9 10`. A plain function, not a hook — the pager is presentational
- * and derives this from props rather than owning page state.
+ * Seven slots at most, and the last two pages are always reachable — the design
+ * shows `1 2 3 … 9 10`, so the head is three wide rather than five.
  */
 function buildPageNumbers(page: number, totalPages: number): number[] {
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
-  if (page <= 4) {
-    return [1, 2, 3, 4, 5, PAGE_ELLIPSIS, totalPages - 1, totalPages];
+  if (page <= 3) {
+    return [1, 2, 3, PAGE_ELLIPSIS, totalPages - 1, totalPages];
   }
-  if (page >= totalPages - 3) {
-    return [
-      1,
-      PAGE_ELLIPSIS,
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
+  if (page >= totalPages - 2) {
+    return [1, 2, PAGE_ELLIPSIS, totalPages - 2, totalPages - 1, totalPages];
   }
   return [1, PAGE_ELLIPSIS, page - 1, page, page + 1, PAGE_ELLIPSIS, totalPages];
 }

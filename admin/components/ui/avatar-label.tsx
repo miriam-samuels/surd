@@ -1,14 +1,6 @@
 import { Avatar, type AvatarIndicator, type AvatarSize } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 
-/**
- * An avatar paired with a name and a supporting line — the standard way to
- * render a person in tables, lists and menus.
- *
- *   <AvatarLabel name="X_AE_A-13" caption="Product Designer, slothUI" />
- */
-
-/** Typography pairs with the avatar size so the block stays optically aligned. */
 const typography: Record<AvatarSize, { name: string; caption: string }> = {
   xs: { name: "text-2xs", caption: "text-2xs" },
   sm: { name: "text-xs", caption: "text-2xs" },
@@ -53,7 +45,7 @@ export function AvatarLabel({
     >
       <Avatar src={src} name={name} size={size} indicator={indicator} />
       <div className="flex min-w-0 flex-col">
-        <span className={cn("truncate font-bold text-grey-900", type.name)}>
+        <span className={cn("truncate font-medium text-grey-900", type.name)}>
           {name}
         </span>
         {caption ? (

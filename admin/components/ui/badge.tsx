@@ -1,18 +1,6 @@
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * A compact status pill.
- *
- * Every slot is optional, so the same component covers a bare label, a status
- * dot, an icon pair, or all of them at once:
- *
- *   <Badge tone="success" dot>Active</Badge>
- *   <Badge tone="primary" leadingIcon={ArrowUp01Icon} trailingIcon={ArrowRight01Icon}>
- *     Label
- *   </Badge>
- */
-
 export const BADGE_TONES = [
   "neutral",
   "primary",
@@ -38,26 +26,25 @@ const toneStyles: Record<BadgeTone, Record<BadgeVariant, string>> = {
   primary: {
     solid: "bg-surd-blue-500 text-white",
     soft: "bg-surd-blue-50 text-surd-blue-600",
-    outline: "border border-surd-blue-500 bg-white text-surd-blue-500",
+    outline: "border border-surd-blue-500 bg-surd-blue-50 text-surd-blue-700",
   },
   danger: {
     solid: "bg-red-500 text-white",
     soft: "bg-red-50 text-red-600",
-    outline: "border border-red-500 bg-white text-red-500",
+    outline: "border border-red-500 bg-red-50 text-red-700",
   },
   warning: {
     solid: "bg-orange-500 text-white",
     soft: "bg-orange-50 text-orange-700",
-    outline: "border border-orange-500 bg-white text-orange-700",
+    outline: "border border-orange-500 bg-orange-50 text-orange-700",
   },
   success: {
     solid: "bg-green-600 text-white",
     soft: "bg-green-50 text-green-700",
-    outline: "border border-green-600 bg-white text-green-700",
+    outline: "border border-green-600 bg-green-50 text-green-700",
   },
 };
 
-/** On a solid surface the dot has to read against the fill, not the page. */
 const dotStyles: Record<BadgeTone, Record<BadgeVariant, string>> = {
   neutral: { solid: "bg-white", soft: "bg-grey-900", outline: "bg-grey-900" },
   primary: {
@@ -91,7 +78,7 @@ type BadgeProps = React.ComponentProps<"span"> & {
   tone?: BadgeTone;
   variant?: BadgeVariant;
   size?: BadgeSize;
-  /** Show the small status dot before the label. */
+
   dot?: boolean;
   leadingIcon?: IconSvgElement;
   trailingIcon?: IconSvgElement;

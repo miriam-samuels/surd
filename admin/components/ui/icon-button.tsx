@@ -11,14 +11,6 @@ import {
 } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-/**
- * A square-footprint button holding a single icon.
- *
- * It shares the tone/variant/size vocabulary with `Button` but sets its own
- * geometry, since a text button's horizontal padding would make it oblong.
- * `label` is required — an icon alone tells a screen reader nothing.
- */
-
 export {
   BUTTON_SHAPES as ICON_BUTTON_SHAPES,
   BUTTON_SIZES as ICON_BUTTON_SIZES,
@@ -76,6 +68,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   md: "size-8",
   lg: "size-10",
   xl: "size-12",
+  xxl: "size-15",
 };
 
 const glyphSizes: Record<ButtonSize, number> = {
@@ -84,6 +77,7 @@ const glyphSizes: Record<ButtonSize, number> = {
   md: 16,
   lg: 18,
   xl: 22,
+  xxl: 28,
 };
 
 const shapeStyles: Record<ButtonShape, string> = {
@@ -94,7 +88,7 @@ const shapeStyles: Record<ButtonShape, string> = {
 
 type IconButtonProps = Omit<React.ComponentProps<"button">, "children"> & {
   icon: IconSvgElement;
-  /** Announced to assistive tech and shown as the tooltip. */
+
   label: string;
   tone?: ButtonTone;
   variant?: ButtonVariant;

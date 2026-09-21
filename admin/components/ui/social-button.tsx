@@ -9,18 +9,6 @@ import {
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * Third-party sign-in buttons.
- *
- * Each provider carries its own brand colour, so the tone lives in the
- * provider table rather than on the component.
- *
- * NOTE: the marks come from Hugeicons and are monochrome. Several providers
- * (Google, Figma) require their full-colour official logo in production —
- * drop the official SVG into `public/brand/` and swap `icon` for it when
- * these buttons ship to users.
- */
-
 export const SOCIAL_PROVIDERS = [
   "facebook",
   "twitter",
@@ -35,9 +23,9 @@ export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 type ProviderConfig = {
   label: string;
   icon: IconSvgElement;
-  /** Background for the solid variant. */
+
   solid: string;
-  /** Icon colour for the outline variant. */
+
   accent: string;
 };
 
@@ -85,9 +73,9 @@ export type SocialButtonVariant = "solid" | "outline";
 type SocialButtonProps = Omit<React.ComponentProps<"button">, "children"> & {
   provider: SocialProvider;
   variant?: SocialButtonVariant;
-  /** Drop the label and render a square icon-only button. */
+
   iconOnly?: boolean;
-  /** Overrides the default "Sign In With {provider}". */
+
   label?: string;
   block?: boolean;
 };

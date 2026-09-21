@@ -3,26 +3,6 @@ import { UserIcon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * Avatar, and the pieces that hang off it.
- *
- * An avatar renders one of three things, in order of preference: a photo, a
- * set of initials, or the fallback user glyph. Pass `src` for a photo and
- * `name` for initials — `name` also becomes the alt text, so pass it either
- * way.
- *
- * The optional `indicator` sits in the bottom-right corner and is a
- * discriminated union, so a count badge cannot be built without its value:
- *
- *   <Avatar name="Sam Lee" indicator={{ type: "dot", tone: "success" }} />
- *   <Avatar name="Sam Lee" indicator={{ type: "count", value: 2 }} />
- *   <Avatar name="Sam Lee" indicator={{ type: "verified" }} />
- *
- * `tone` only shows through when there is no photo. `brand` is the tinted chip
- * used in tables and lists; `inverse` is the solid dark disc the topbar uses
- * for the signed-in admin, which needs to read as a control rather than data.
- */
-
 export const AVATAR_SIZES = ["xs", "sm", "md", "lg", "xl", "2xl"] as const;
 export type AvatarSize = (typeof AVATAR_SIZES)[number];
 
@@ -40,7 +20,6 @@ export type AvatarIndicator =
   | { type: "count"; value: number; tone?: IndicatorTone }
   | { type: "verified" };
 
-/** Pixel geometry per size, kept in one table so the parts stay in proportion. */
 const metrics: Record<
   AvatarSize,
   { box: number; glyph: number; dot: number; badge: number; text: string }
@@ -69,10 +48,6 @@ const countTones: Record<IndicatorTone, string> = {
   success: "bg-green-500 text-white",
 };
 
-/**
- * "Ada Lovelace" → "AL", "Sam" → "SA", "X_AE_A-13" → "XA".
- * Punctuation is ignored so handles and usernames still produce letters.
- */
 export function initialsFrom(name: string) {
   const words = name
     .split(/[^\p{L}\p{N}]+/u)
@@ -90,10 +65,10 @@ const fallbackTones = {
 
 type AvatarProps = Omit<React.ComponentProps<"span">, "children"> & {
   src?: string;
-  /** Person's name — used for initials and alt text. */
+
   name?: string;
   size?: AvatarSize;
-  /** Colour of the initials chip when there is no photo. */
+
   tone?: keyof typeof fallbackTones;
   indicator?: AvatarIndicator;
 };
@@ -194,7 +169,6 @@ function AvatarIndicatorDot({
   );
 }
 
-/** The scalloped verification mark. Decorative — the label carries the meaning. */
 function VerifiedBadge({ size }: { size: number }) {
   return (
     <svg

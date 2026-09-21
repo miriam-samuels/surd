@@ -5,15 +5,6 @@ import { MinusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * Checkbox built on Radix, so keyboard, label association and the
- * indeterminate state come for free.
- *
- * Pass `checked="indeterminate"` for the mixed state of a parent row.
- *
- *   <Checkbox checked={all} onCheckedChange={setAll} label="Select all" />
- */
-
 export const CHECKBOX_SIZES = ["sm", "md", "lg"] as const;
 export type CheckboxSize = (typeof CHECKBOX_SIZES)[number];
 
@@ -33,9 +24,9 @@ const labelSizes: Record<CheckboxSize, string> = {
 
 type CheckboxProps = React.ComponentProps<typeof RadixCheckbox.Root> & {
   size?: CheckboxSize;
-  /** Renders a `<label>` beside the control and wires it up. */
+
   label?: string;
-  /** Square corners instead of the default rounded ones. */
+
   shape?: "rounded" | "square";
 };
 

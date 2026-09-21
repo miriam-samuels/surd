@@ -1,0 +1,417 @@
+export enum Currency {
+  NGN = "NGN",
+  USD = "USD",
+  GBP = "GBP",
+  EUR = "EUR",
+  GHS = "GHS",
+  KES = "KES",
+  USDT = "USDT",
+  USDC = "USDC",
+  BTC = "BTC",
+  ETH = "ETH",
+  BNB = "BNB",
+  TRX = "TRX",
+  SOL = "SOL",
+}
+
+export type FiatCurrency =
+  | Currency.NGN
+  | Currency.USD
+  | Currency.GBP
+  | Currency.EUR
+  | Currency.GHS
+  | Currency.KES;
+
+export type CryptoCurrency =
+  | Currency.USDT
+  | Currency.USDC
+  | Currency.BTC
+  | Currency.ETH
+  | Currency.BNB
+  | Currency.TRX
+  | Currency.SOL;
+
+export const FIAT_CURRENCIES: readonly FiatCurrency[] = [
+  Currency.NGN,
+  Currency.USD,
+  Currency.GBP,
+  Currency.EUR,
+  Currency.GHS,
+  Currency.KES,
+];
+
+export const CRYPTO_CURRENCIES: readonly CryptoCurrency[] = [
+  Currency.USDT,
+  Currency.USDC,
+  Currency.BTC,
+  Currency.ETH,
+  Currency.BNB,
+  Currency.TRX,
+  Currency.SOL,
+];
+
+export function isCryptoCurrency(currency: string): currency is CryptoCurrency {
+  return (CRYPTO_CURRENCIES as readonly string[]).includes(currency);
+}
+
+export type CountryCode = string;
+
+export enum RecordStatus {
+  Open = "OPEN",
+  Closed = "CLOSED",
+  Active = "ACTIVE",
+  Inactive = "INACTIVE",
+  Deleted = "DELETED",
+  Pending = "PENDING",
+  Completed = "COMPLETED",
+  Broken = "BROKEN",
+}
+
+export enum UserStatus {
+  Active = "ACTIVE",
+  Inactive = "INACTIVE",
+  Pending = "PENDING",
+  Suspended = "SUSPENDED",
+  Frozen = "FROZEN",
+  Closed = "CLOSED",
+  Deleted = "DELETED",
+}
+
+/**
+ * Named in full by the KYC integration note, prefixes included — the earlier
+ * unprefixed set was inferred from the resolver and did not match the wire.
+ */
+export enum KycStatus {
+  Pending = "KYC_PENDING",
+  Processing = "KYC_PROCESSING",
+  Verified = "KYC_VERIFIED",
+  Rejected = "KYC_REJECTED",
+}
+
+/**
+ * The two a reviewer may set. `PENDING` and `PROCESSING` return a 400 — a
+ * review moves *out* of the queue, never back into it.
+ */
+export const KYC_DECISIONS = [KycStatus.Verified, KycStatus.Rejected] as const;
+
+export enum IdDocument {
+  NinSlip = "NIN_SLIP",
+  IdCard = "ID_CARD",
+  Passport = "PASSPORT",
+  DriversLicense = "DRIVERS_LICENSE",
+  VotersCard = "VOTERS_CARD",
+}
+
+export const ID_DOCUMENT_LABELS: Record<IdDocument, string> = {
+  [IdDocument.NinSlip]: "NIN slip",
+  [IdDocument.IdCard]: "ID card",
+  [IdDocument.Passport]: "Passport",
+  [IdDocument.DriversLicense]: "Driver's licence",
+  [IdDocument.VotersCard]: "Voter's card",
+};
+
+export enum UserTier {
+  Zero = "TIER_ZERO",
+  One = "TIER_ONE",
+  Two = "TIER_TWO",
+  Three = "TIER_THREE",
+}
+
+export enum VerificationPurpose {
+  Kyc = "KYC",
+}
+
+export enum TransactionStatus {
+  Pending = "PENDING",
+  Processing = "PROCESSING",
+  Completed = "COMPLETED",
+  Failed = "FAILED",
+  Cancelled = "CANCELLED",
+  Rejected = "REJECTED",
+  Refunded = "REFUNDED",
+  OnHold = "ON_HOLD",
+}
+
+export const OPEN_TRANSACTION_STATUSES: readonly TransactionStatus[] = [
+  TransactionStatus.Pending,
+  TransactionStatus.Processing,
+  TransactionStatus.OnHold,
+];
+
+export enum TransactionDirection {
+  Credit = "CREDIT",
+  Debit = "DEBIT",
+}
+
+export enum TransactionType {
+  Deposit = "DEPOSIT",
+  Withdrawal = "WITHDRAWAL",
+  Transfer = "TRANSFER",
+  SavingsFunding = "SAVINGS_FUNDING",
+  SavingsWithdrawal = "SAVINGS_WITHDRAWAL",
+  RoiPayout = "ROI_PAYOUT",
+  CapitalOutflow = "CAPITAL_OUTFLOW",
+  CapitalRefund = "CAPITAL_REFUND",
+  Conversion = "CONVERSION",
+  Fee = "FEE",
+}
+
+export enum SavingsTemplate {
+  FlexSave = "FLEX_SAVE",
+  TargetSave = "TARGET_SAVE",
+  FixedSave = "FIXED_SAVE",
+}
+
+export enum SavingsFrequency {
+  Daily = "DAILY",
+  Weekly = "WEEKLY",
+  Monthly = "MONTHLY",
+  Quarterly = "QUARTERLY",
+  Annually = "ANNUALLY",
+  OneTime = "ONE_TIME",
+  ProRata = "PRO_RATA",
+}
+
+export enum WithdrawalMode {
+  Locked = "LOCKED",
+  Flexible = "FLEXIBLE",
+}
+
+export enum SourceOfFunds {
+  Wallet = "WALLET",
+  Card = "CARD",
+}
+
+export enum SavingsSortField {
+  UpdatedAt = "UPDATED_AT",
+  CreatedAt = "CREATED_AT",
+  StartedAt = "STARTED_AT",
+  EndingAt = "ENDING_AT",
+  AmountSaved = "AMOUNT_SAVED",
+}
+
+export enum SortDirection {
+  Desc = "desc",
+  Asc = "asc",
+}
+
+export enum WalletType {
+  Flexi = "FLEXI",
+  Savings = "SAVINGS",
+  Vault = "VAULT",
+  Crypto = "CRYPTO",
+}
+
+export enum BreakdownMode {
+  Savings = "SAVINGS",
+  System = "SYSTEM",
+  Currency = "CURRENCY",
+}
+
+/** Series bucket width. `DAY` is the server default when omitted. */
+export enum Granularity {
+  Day = "DAY",
+  Month = "MONTH",
+  Year = "YEAR",
+}
+
+/**
+ * The six-bucket display taxonomy, derived server-side from `type` and
+ * direction. Tables render this; `TransactionType` is storage and never shown.
+ * Filtering on it is mutually exclusive with `type` — sending both is a 400.
+ */
+export enum TransactionCategory {
+  Deposit = "DEPOSIT",
+  Withdrawal = "WITHDRAWAL",
+  Transfer = "TRANSFER",
+  RoiPayout = "ROI_PAYOUT",
+  RoiClawback = "ROI_CLAWBACK",
+  Conversion = "CONVERSION",
+  Other = "OTHER",
+}
+
+/** Required when settling a transaction as CANCELLED, ignored otherwise. */
+export enum CancellationReason {
+  SuspectedFraud = "SUSPECTED_FRAUD",
+  FailedComplianceCheck = "FAILED_COMPLIANCE_CHECK",
+  InvalidDestinationAccount = "INVALID_DESTINATION_ACCOUNT",
+  DuplicateRequest = "DUPLICATE_REQUEST",
+  CustomerRequest = "CUSTOMER_REQUEST",
+  InsufficientVerification = "INSUFFICIENT_VERIFICATION",
+  Other = "OTHER",
+}
+
+export enum CapitalTransactionType {
+  Outflow = "OUTFLOW",
+  Refund = "REFUND",
+}
+
+export type ProductStatus = Extract<
+  RecordStatus,
+  | RecordStatus.Active
+  | RecordStatus.Inactive
+  | RecordStatus.Pending
+  | RecordStatus.Deleted
+>;
+
+export type FaqStatus = Extract<
+  RecordStatus,
+  RecordStatus.Active | RecordStatus.Inactive | RecordStatus.Deleted
+>;
+
+export type SavingStatus = Extract<
+  RecordStatus,
+  | RecordStatus.Active
+  | RecordStatus.Pending
+  | RecordStatus.Completed
+  | RecordStatus.Broken
+  | RecordStatus.Closed
+  | RecordStatus.Inactive
+>;
+
+/** One value per admin page. The filter groups these — see `AUDIT_MODULE_GROUPS`. */
+export enum AuditModule {
+  Dashboard = "DASHBOARD",
+  Finance = "FINANCE",
+  Wallet = "WALLET",
+  Savings = "SAVINGS",
+  Roi = "ROI",
+  Vault = "VAULT",
+  Treasury = "TREASURY",
+  TransactionHistory = "TRANSACTION_HISTORY",
+  Users = "USERS",
+  UserList = "USER_LIST",
+  KycCompliance = "KYC_COMPLIANCE",
+  Configuration = "CONFIGURATION",
+  Rates = "RATES",
+  Penalties = "PENALTIES",
+  Limits = "LIMITS",
+  Settings = "SETTINGS",
+  AdminAccounts = "ADMIN_ACCOUNTS",
+  ContentMarketing = "CONTENT_MARKETING",
+  DeveloperConfig = "DEVELOPER_CONFIG",
+}
+
+/**
+ * The sidebar sections the filter offers, each mapped to the modules it covers.
+ *
+ * The enum is one value per page; the design's picker is one entry per section.
+ * `DASHBOARD` sits under Finance so no module can produce a row the picker
+ * cannot reach.
+ */
+export const AUDIT_MODULE_GROUPS = {
+  Finance: [
+    AuditModule.Dashboard,
+    AuditModule.Finance,
+    AuditModule.Wallet,
+    AuditModule.Savings,
+    AuditModule.Roi,
+    AuditModule.Vault,
+    AuditModule.Treasury,
+    AuditModule.TransactionHistory,
+  ],
+  Users: [AuditModule.Users, AuditModule.UserList, AuditModule.KycCompliance],
+  Configurations: [
+    AuditModule.Configuration,
+    AuditModule.Rates,
+    AuditModule.Penalties,
+    AuditModule.Limits,
+  ],
+  Settings: [
+    AuditModule.Settings,
+    AuditModule.AdminAccounts,
+    AuditModule.ContentMarketing,
+    AuditModule.DeveloperConfig,
+  ],
+} as const satisfies Record<string, readonly AuditModule[]>;
+
+export type AuditModuleGroup = keyof typeof AUDIT_MODULE_GROUPS;
+
+/**
+ * Which section a module belongs to.
+ *
+ * The Module column prints the group, not the raw value: a filter labelled
+ * "Finance" that yields rows labelled "Treasury" reads like a bug.
+ */
+export const AUDIT_MODULE_GROUP_OF = Object.fromEntries(
+  Object.entries(AUDIT_MODULE_GROUPS).flatMap(([group, modules]) =>
+    modules.map((module) => [module, group as AuditModuleGroup]),
+  ),
+) as Record<AuditModule, AuditModuleGroup>;
+
+/** Failures are recorded too — a denied privilege check writes a row. */
+export enum AuditStatus {
+  Success = "SUCCESS",
+  Failure = "FAILURE",
+}
+
+/** Served from the compiled privilege enum, so it cannot drift from the server. */
+export enum AdminPrivilege {
+  UserManagement = "USER_MANAGEMENT",
+  KycCompliance = "KYC_COMPLIANCE",
+  TransactionManagement = "TRANSACTION_MANAGEMENT",
+  ProductConfiguration = "PRODUCT_CONFIGURATION",
+  TreasuryManagement = "TREASURY_MANAGEMENT",
+  PlatformSettings = "PLATFORM_SETTINGS",
+  AdminOnboarding = "ADMIN_ONBOARDING",
+  ViewAuditLogs = "VIEW_AUDIT_LOGS",
+  ExportReports = "EXPORT_REPORTS",
+  ContentMarketing = "CONTENT_MARKETING",
+}
+
+export enum AdminAccountStatus {
+  Active = "ACTIVE",
+  PendingInvite = "PENDING_INVITE",
+  Suspended = "SUSPENDED",
+}
+
+export enum AdminInviteStatus {
+  Pending = "PENDING",
+  Accepted = "ACCEPTED",
+  Cancelled = "CANCELLED",
+}
+
+export enum ContentPlatform {
+  MobileApp = "MOBILE_APP",
+  AdminPortal = "ADMIN_PORTAL",
+  Website = "WEBSITE",
+}
+
+/** Intrinsic to the config key — Operating Buffer *is* a percentage. */
+export enum ConfigUnit {
+  Percentage = "PERCENTAGE",
+  Ngn = "NGN",
+  Usd = "USD",
+  Hours = "HOURS",
+  Days = "DAYS",
+}
+
+/**
+ * Derived server-side, so the ROI table's Type column and the rows the filter
+ * returns cannot disagree. Null on a row that is not ROI activity.
+ *
+ * There is deliberately no `CONVERTED`: interest cannot be converted. It has to
+ * be withdrawn to Flexi first, at which point it is principal and the
+ * withdrawal has already reported as `WITHDRAWN`.
+ */
+export enum RoiActivityType {
+  Credited = "CREDITED",
+  Withdrawn = "WITHDRAWN",
+  ClawedBack = "CLAWED_BACK",
+}
+
+/** Which second factor a capital-movement challenge was issued for. */
+export enum ChallengeMethod {
+  App = "APP",
+  Email = "EMAIL",
+}
+
+/**
+ * Capital movement types. The Treasury table's Status badge reads `type`, not
+ * `category` — both of these fall into `category: OTHER`, because the
+ * six-bucket taxonomy describes *customer* money movement.
+ */
+export enum CapitalTransactionKind {
+  Outflow = "ADMIN_OUTFLOW",
+  Refund = "ADMIN_REFUND",
+}

@@ -12,25 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * Popover pickers.
- *
- * Three exports, one surface:
- *
- * `Dropdown`       single choice — "All modules" style filters and menus
- * `MultiDropdown`  many choices with checkboxes, an "All" row and an optional
- *                  search box; the trigger shows a count, and once a selection
- *                  exists it collapses to a removable chip
- * `FilterChip`     the chip itself, exported for hand-rolled filter bars
- *
- * Both are built on Radix Popover rather than Select so the panel can hold a
- * search field and avatars, which a native listbox cannot.
- */
-
 export type DropdownOption = {
   value: string;
   label: string;
-  /** Rendered before the label in the list and the trigger. */
+
   icon?: React.ReactNode;
 };
 
@@ -46,13 +31,11 @@ const triggerClass = cn(
   "disabled:pointer-events-none disabled:opacity-40",
 );
 
-/* ------------------------------------------------------------------ single */
-
 type DropdownProps = {
   options: DropdownOption[];
   value?: string;
   onChange?: (value: string) => void;
-  /** Shown when nothing is selected. */
+
   placeholder?: string;
   icon?: IconSvgElement;
   align?: "start" | "center" | "end";
@@ -79,13 +62,15 @@ export function Dropdown({
         disabled={disabled}
         className={cn(triggerClass, className)}
       >
-        {icon ? <Icon icon={icon} size={16} className="text-grey-400" /> : null}
+        {icon ? <Icon icon={icon} size={16} className="text-grey-400 rounded-full" /> : null}
         {selected?.icon}
-        <span className="truncate">{selected?.label ?? placeholder}</span>
+        <span className={cn("truncate", !selected && "text-grey-400")}>
+          {selected?.label ?? placeholder}
+        </span>
         <Icon
           icon={ArrowDown01Icon}
           size={16}
-          className={cn("ml-auto text-grey-400 transition-transform", open && "rotate-180")}
+          className={cn("ml-auto text-grey-400 transition-transform rounded-full", open && "rotate-180")}
         />
       </Popover.Trigger>
 
@@ -123,15 +108,13 @@ export function Dropdown({
   );
 }
 
-/* ------------------------------------------------------------------- multi */
-
 type MultiDropdownProps = {
   options: DropdownOption[];
   value: string[];
   onChange: (value: string[]) => void;
-  /** Trigger text when nothing is selected, e.g. "All modules". */
+
   label: string;
-  /** Adds a search field above the list. Worth it past ~8 options. */
+
   searchable?: boolean;
   searchPlaceholder?: string;
   align?: "start" | "center" | "end";
@@ -169,7 +152,6 @@ export function MultiDropdown({
     );
   };
 
-  /* An empty selection and a full one both mean "no filter" to the caller. */
   const toggleAll = () =>
     onChange(allSelected ? [] : options.map((option) => option.value));
 
@@ -250,7 +232,6 @@ export function MultiDropdown({
   );
 }
 
-/** One selection shows its own label; several collapse to a count. */
 function TriggerSummary({
   label,
   selected,
@@ -277,15 +258,12 @@ function TriggerSummary({
   );
 }
 
-/* -------------------------------------------------------------------- chip */
-
 type FilterChipProps = {
   label: string;
   icon?: React.ReactNode;
   onRemove: () => void;
 };
 
-/** A removable applied-filter pill, as used above the audit log table. */
 export function FilterChip({ label, icon, onRemove }: FilterChipProps) {
   return (
     <span className="inline-flex h-10 items-center gap-2 rounded-full border border-primary bg-white px-4 text-sm font-semibold text-primary">

@@ -23,7 +23,9 @@ import { CurrencyInput, InputAction } from "@/components/ui/currency-input";
 import { Field } from "@/components/ui/field";
 import { Flag } from "@/components/ui/flag";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input, INPUT_STATES } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { Icon } from "@/components/ui/icon";
+
 import { NumberInput } from "@/components/ui/number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -36,6 +38,8 @@ import {
   Specimen,
   SpecimenGrid,
 } from "@/components/showcase/specimen";
+
+const INPUT_VARIANTS = ["default", "error", "success"] as const;
 
 export const metadata: Metadata = {
   title: "Components",
@@ -74,7 +78,7 @@ export default function ComponentsPage() {
 
       <Section
         title="Button"
-        description="Four axes: tone, variant, size, shape. Icons are passed as data via leadingIcon / trailingIcon."
+        description="Four axes: tone, variant, size, shape. Icons are passed as data via leadingIcon / trailingIcon. `loading` swaps the leading icon for a spinner and makes the button inert."
       >
         <SpecimenGrid>
           {BUTTON_TONES.map((tone) => (
@@ -110,6 +114,17 @@ export default function ComponentsPage() {
             <Button shape="pill">Pill</Button>
             <Button shape="square">Square</Button>
             <Button disabled>Disabled</Button>
+          </Specimen>
+          <Specimen label="loading">
+            {BUTTON_VARIANTS.map((variant) => (
+              <Button key={variant} tone="primary" variant={variant} loading>
+                Saving
+              </Button>
+            ))}
+
+            <Button tone="danger" leadingIcon={PlusSignIcon} loading>
+              Deleting
+            </Button>
           </Specimen>
         </SpecimenGrid>
       </Section>
@@ -262,15 +277,15 @@ export default function ComponentsPage() {
 
       <Section
         title="Inputs"
-        description="Every field shares one shell, so surface, height and focus behaviour stay identical. Hover and focus are CSS states; only default / error / active are props."
+        description="Every field shares one shell, so surface, height and focus behaviour stay identical. Hover and focus are CSS states; only default / error / success are props. Label, tooltip, prefix and helper text live on Input itself."
       >
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {INPUT_STATES.map((state) => (
+          {INPUT_VARIANTS.map((state) => (
             <Field key={state} label={`Text — ${state}`} htmlFor={`text-${state}`}>
               <Input
                 id={`text-${state}`}
-                state={state}
-                leadingIcon={UserIcon}
+                variant={state}
+                leftIcon={<Icon icon={UserIcon} size={20} />}
                 placeholder="example@gmail.com"
               />
             </Field>
@@ -291,16 +306,14 @@ export default function ComponentsPage() {
             <Input
               id="date"
               placeholder="dd/mm/yyyy"
-              trailingIcon={Calendar03Icon}
+              rightIcon={<Icon icon={Calendar03Icon} size={20} />}
             />
           </Field>
           <Field label="URL" htmlFor="url">
             <Input
               id="url"
               placeholder="google.com"
-              leading={
-                <span className="shrink-0 text-sm text-grey-300">https://</span>
-              }
+              prefix="https://"
             />
           </Field>
           <Field label="Currency" htmlFor="currency">
@@ -310,7 +323,8 @@ export default function ComponentsPage() {
             <Input
               id="otp"
               placeholder="100.00"
-              trailing={<InputAction>Get OTP</InputAction>}
+              className="pr-24"
+              rightIcon={<InputAction>Get OTP</InputAction>}
             />
           </Field>
           <Field
@@ -320,11 +334,42 @@ export default function ComponentsPage() {
           >
             <Input
               id="error"
-              state="error"
-              leadingIcon={Mail01Icon}
+              variant="error"
+              leftIcon={<Icon icon={Mail01Icon} size={20} />}
               defaultValue="example@gmail"
             />
           </Field>
+
+          <Input
+            id="own-label"
+            label="Own label"
+            required
+            helperText="Input renders its own label and message."
+            placeholder="example@gmail.com"
+            leftIcon={<Icon icon={Mail01Icon} size={20} />}
+          />
+          <Input
+            id="tooltip"
+            label="With tooltip"
+            infoTooltip="Applies across every wallet the customer holds."
+            placeholder="0"
+          />
+          <Input
+            id="prefixed"
+            label="Prefix and grouping"
+            prefix="NGN"
+            type="number"
+            defaultValue="1500000"
+            helperText="Digits group as you type."
+          />
+          <Input
+            id="own-error"
+            label="Own error"
+            error
+            helperText="Enter a valid email address"
+            leftIcon={<Icon icon={Mail01Icon} size={20} />}
+            defaultValue="example@gmail"
+          />
         </div>
       </Section>
 

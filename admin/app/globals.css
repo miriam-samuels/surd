@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-toastify/ReactToastify.css";
 
 /* ==========================================================================
    SURD Design System
@@ -8,15 +9,11 @@
      Effects     node 108:27370
    ========================================================================== */
 
-/* Dark mode: follows the OS by default; `.dark` / `.light` on <html> override it. */
+/* Light is the default. Dark is opt-in: it applies only under a `.dark`
+   ancestor, so the OS setting never flips the console on its own. */
 @custom-variant dark {
   &:where(.dark, .dark *) {
     @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:not(.light, .light *)) {
-      @slot;
-    }
   }
 }
 
@@ -227,10 +224,10 @@
   --text-heading-md: 2.25rem; /* 36px */
   --text-heading-md--line-height: 2.75rem; /* 44px */
   --text-heading-md--letter-spacing: -0.014em;
-  --text-heading-sm: 1.875rem; /* 30px */
+  --text-heading-sm: 1.575rem; /* 30px */
   --text-heading-sm--line-height: 2.375rem; /* 38px */
   --text-heading-sm--letter-spacing: -0.013em;
-  --text-heading-xs: 1.5rem; /* 24px */
+  --text-heading-xs: 1.25rem; /* 24px */
   --text-heading-xs--line-height: 2rem; /* 32px */
   --text-heading-xs--letter-spacing: -0.012em;
 
@@ -402,54 +399,6 @@
   --info-subtle-foreground: var(--color-blue-800);
 
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: var(--color-grey-1000);
-    --background-subtle: var(--color-grey-950);
-    --surface: var(--color-grey-950);
-    --surface-raised: var(--color-grey-900);
-    --surface-sunken: var(--color-black);
-    --surface-inverse: var(--color-grey-10);
-
-    --foreground: var(--color-grey-10);
-    --foreground-muted: var(--color-grey-400);
-    --foreground-subtle: var(--color-grey-500);
-    --foreground-inverse: var(--color-grey-1000);
-
-    --border: var(--color-grey-800);
-    --border-strong: var(--color-grey-700);
-
-    --primary: var(--color-surd-blue-500);
-    --primary-hover: var(--color-surd-blue-400);
-    --primary-active: var(--color-surd-blue-300);
-    --primary-foreground: var(--color-white);
-    --primary-subtle: var(--color-surd-blue-900);
-    --primary-subtle-foreground: var(--color-surd-blue-100);
-
-    --success: var(--color-green-500);
-    --success-foreground: var(--color-green-950);
-    --success-subtle: var(--color-green-950);
-    --success-subtle-foreground: var(--color-green-200);
-
-    --warning: var(--color-orange-400);
-    --warning-foreground: var(--color-orange-950);
-    --warning-subtle: var(--color-orange-950);
-    --warning-subtle-foreground: var(--color-orange-200);
-
-    --danger: var(--color-red-400);
-    --danger-foreground: var(--color-red-950);
-    --danger-subtle: var(--color-red-950);
-    --danger-subtle-foreground: var(--color-red-200);
-
-    --info: var(--color-blue-400);
-    --info-foreground: var(--color-blue-950);
-    --info-subtle: var(--color-blue-950);
-    --info-subtle-foreground: var(--color-blue-200);
-
-    color-scheme: dark;
-  }
 }
 
 .dark {
@@ -631,6 +580,7 @@
   --animate-drawer-in: drawer-in 200ms ease-out;
   --animate-drawer-in-right: drawer-in-right 200ms ease-out;
   --animate-toast-in: toast-in 180ms ease-out;
+  --animate-tooltip-in: tooltip-in 120ms ease-out;
 }
 
 @keyframes drawer-in {
@@ -639,6 +589,17 @@
   }
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -693,29 +654,47 @@
  * behind white numerals.
  */
 @utility brand-ribbon {
-  background-color: var(--color-surd-blue-900);
+  /* The darkening is a flat overlay stacked *inside* `background-image`, above
+     the photograph, rather than `filter: brightness()` on the element — a
+     filter darkens the element's children too, and the white numerals sitting
+     on this banner are the whole point of it. Raise the alpha to go darker. */
+  background-image:
+    linear-gradient(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.2)),
+    url('/patterns/shades.jpg');
+  background-size:cover;
+  background-position:center;
+  /* background-color: var(--color-surd-blue-900);
   background-image:
     repeating-linear-gradient(
-      115deg,
+      30deg,
       rgb(255 255 255 / 0.06) 0px,
       rgb(255 255 255 / 0.06) 60px,
       transparent 60px,
       transparent 130px
     ),
     repeating-linear-gradient(
-      115deg,
+      30deg,
       rgb(0 0 0 / 0.1) 0px,
       rgb(0 0 0 / 0.1) 110px,
       transparent 110px,
       transparent 240px
     ),
     linear-gradient(
-      115deg,
+      30deg,
       #3a9fdd 0%,
       #1c78d8 18%,
       #0b52dd 45%,
       #0730bd 68%,
       #041c78 88%,
       #020e3a 100%
-    );
+    ); */
+}
+
+/* Error text injected into the DOM by minimalist-reactkit's <Form> validator. */
+.input-error {
+  position: absolute !important;
+  bottom: -30%;
+  color: var(--color-red-500);
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
 }

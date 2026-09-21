@@ -3,16 +3,6 @@
 import { RadioGroup as RadixRadioGroup } from "radix-ui";
 import { cn } from "@/lib/cn";
 
-/**
- * Radio group built on Radix — arrow-key roving focus and single selection are
- * handled for us.
- *
- *   <RadioGroup value={plan} onValueChange={setPlan}>
- *     <RadioGroupItem value="flexi" label="Flexi wallet" />
- *     <RadioGroupItem value="fixed" label="Fixed deposit" />
- *   </RadioGroup>
- */
-
 export const RADIO_SIZES = ["sm", "md", "lg"] as const;
 export type RadioSize = (typeof RADIO_SIZES)[number];
 

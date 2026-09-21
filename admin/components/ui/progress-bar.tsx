@@ -1,11 +1,5 @@
 import { cn } from "@/lib/cn";
 
-/**
- * How far a savings plan has come.
- *
- * `value` is a percentage. The bar turns green once the target is reached, so
- * a completed plan reads at a glance in a long table.
- */
 export function ProgressBar({
   value,
   className,

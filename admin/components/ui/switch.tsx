@@ -5,15 +5,6 @@ import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * On/off toggle built on Radix.
- *
- * `withIcons` draws a ✕ and a ✓ inside the track — useful where the state has
- * to be legible at a glance, such as a permissions matrix.
- *
- *   <Switch checked={live} onCheckedChange={setLive} label="Live mode" />
- */
-
 export const SWITCH_SIZES = ["sm", "md", "lg"] as const;
 export type SwitchSize = (typeof SWITCH_SIZES)[number];
 
@@ -52,7 +43,7 @@ const metrics: Record<SwitchSize, SwitchMetrics> = {
 type SwitchProps = React.ComponentProps<typeof RadixSwitch.Root> & {
   size?: SwitchSize;
   label?: string;
-  /** Draw ✕ / ✓ marks inside the track. */
+
   withIcons?: boolean;
 };
 

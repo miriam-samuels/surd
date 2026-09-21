@@ -3,29 +3,21 @@
 import { useRef } from "react";
 import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
-import { Input, type InputSize, type InputState } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
-
-/**
- * Numeric field with a stepper.
- *
- * The native spinner is hidden (see `.no-spinner` in globals.css) and replaced
- * with a stacked pair of chevrons, which keeps the control the same height as
- * every other field.
- */
 
 type NumberInputProps = Omit<
   React.ComponentProps<"input">,
   "size" | "type" | "prefix"
 > & {
-  state?: InputState;
-  size?: InputSize;
+  variant?: "default" | "error" | "success";
+  inputSize?: "default" | "sm";
   step?: number;
 };
 
 export function NumberInput({
-  state = "default",
-  size = "md",
+  variant = "default",
+  inputSize = "default",
   step = 1,
   disabled,
   className,
@@ -33,13 +25,19 @@ export function NumberInput({
 }: NumberInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  /** Use the native stepper so min/max and `onChange` behave as expected. */
   const nudge = (direction: "up" | "down") => {
     const element = inputRef.current;
     if (!element) return;
-    if (direction === "up") element.stepUp();
-    else element.stepDown();
-    element.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const current = Number(element.value.replace(/,/g, "")) || 0;
+    const next = direction === "up" ? current + step : current - step;
+
+    const setValue = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    setValue?.call(element, String(next));
+    element.dispatchEvent(new Event("input", { bubbles: true }));
     element.focus();
   };
 
@@ -48,11 +46,12 @@ export function NumberInput({
       ref={inputRef}
       type="number"
       step={step}
-      state={state}
-      size={size}
+
+      variant={variant}
+      inputSize={inputSize}
       disabled={disabled}
-      className={cn("no-spinner", className)}
-      trailing={
+      className={cn("no-spinner pr-12", className)}
+      rightIcon={
         <span className="flex shrink-0 flex-col justify-center">
           <StepButton
             direction="up"

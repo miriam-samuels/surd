@@ -29,7 +29,6 @@ const TENURE_FILTER = [
   { value: "90 days", label: "90 days" },
 ];
 
-/** Fixed deposits — funds locked for a fixed term. */
 export default function VaultPage() {
   const [query, setQuery] = useState("");
   const [tenure, setTenure] = useState("all");
@@ -47,7 +46,6 @@ export default function VaultPage() {
   }, [query, tenure]);
 
   const columns: Column<VaultPosition>[] = [
-    { id: "id", header: "Vault ID", cell: (row) => row.id },
     {
       id: "owner",
       header: "Owner",
@@ -130,7 +128,8 @@ export default function VaultPage() {
               options={TENURE_FILTER}
               value={tenure}
               onChange={setTenure}
-              className="w-44"
+                        className="w-34 rounded-lg border-grey-50"
+
             />
           </>
         }
@@ -141,7 +140,7 @@ export default function VaultPage() {
             data={rows}
             columns={columns}
             getRowId={(row) => row.id}
-            minWidth="min-w-6xl"
+            minWidth="min-w-5xl"
             emptyState={
               <EmptyState
                 icon={SecurityLockIcon}

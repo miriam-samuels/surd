@@ -6,17 +6,6 @@ import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import type { Disclosure } from "@/hooks/use-disclosure";
 import { cn } from "@/lib/cn";
 
-/**
- * Panel that slides in from an edge.
- *
- * Built on the same Radix dialog primitive as `Dialog`, so it inherits focus
- * trapping, scroll locking and Escape handling. Reach for a drawer over a
- * dialog when the content is long or the user needs to keep referring to the
- * page behind it — record detail, filter builders, activity feeds.
- *
- * `footer` is pinned to the bottom while the body scrolls.
- */
-
 const sides = {
   right: {
     position: "inset-y-0 right-0",

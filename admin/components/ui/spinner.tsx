@@ -1,11 +1,5 @@
 import { cn } from "@/lib/cn";
 
-/**
- * Indeterminate progress ring.
- *
- * `role="status"` plus the visually hidden label means screen readers announce
- * the wait rather than sitting silent.
- */
 export function Spinner({
   size = 24,
   label = "Loading",

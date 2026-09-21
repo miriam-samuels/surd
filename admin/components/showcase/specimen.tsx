@@ -1,12 +1,5 @@
 import { cn } from "@/lib/cn";
 
-/**
- * Layout helpers for the component gallery at `/components`.
- *
- * These exist only to keep the gallery readable — they are not part of the
- * product UI and should not be imported by application code.
- */
-
 export function Section({
   title,
   description,

@@ -3,27 +3,16 @@
 import { useId, useRef } from "react";
 import { cn } from "@/lib/cn";
 
-/**
- * Segmented one-time-code field.
- *
- * Controlled by a single string, so the parent never juggles six pieces of
- * state. Handles the behaviours people expect from these fields but rarely get:
- * typing advances, backspace on an empty box steps back, arrow keys move,
- * and pasting a full code fills every box at once.
- *
- *   <OtpInput value={code} onChange={setCode} state={wrong ? "error" : "default"} />
- */
-
 export type OtpState = "default" | "error";
 
 type OtpInputProps = {
   value: string;
   onChange: (value: string) => void;
-  /** Total digits. A separator is drawn at the midpoint when even. */
+
   length?: number;
   state?: OtpState;
   disabled?: boolean;
-  /** Fires once the last box is filled. */
+
   onComplete?: (value: string) => void;
   className?: string;
 };
@@ -130,7 +119,7 @@ export function OtpInput({
             onPaste={handlePaste}
             onFocus={(event) => event.target.select()}
             className={cn(
-              "size-12 rounded-xl border text-center text-lg font-semibold sm:size-14",
+              "size-12 rounded-md border text-center text-lg font-semibold sm:size-14",
               "outline-none transition-colors",
               "disabled:pointer-events-none disabled:opacity-40",
               state === "error"

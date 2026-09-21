@@ -2,13 +2,6 @@ import Link from "next/link";
 import { AvatarLabel } from "@/components/ui/avatar-label";
 import { ROUTES } from "@/constants/routes";
 
-/**
- * The person a finance record belongs to, linked through to their profile.
- *
- * Every Finance table has this column, so it lives here rather than being
- * rebuilt per page. `userId` is optional — omit it and the cell renders
- * without a link.
- */
 export function OwnerCell({
   name,
   email,

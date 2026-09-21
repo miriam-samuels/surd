@@ -2,24 +2,20 @@ import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * The white card that wraps each dashboard module — charts, lists, tables.
- *
- * `actions` sits on the right of the header and is where the period filters
- * and expand buttons go.
- */
 type PanelProps = React.ComponentProps<"section"> & {
   title: string;
   icon?: IconSvgElement;
+  iconClass?:string
   hint?: string;
   actions?: React.ReactNode;
-  /** Rendered flush against the card edges, e.g. a full-bleed table. */
+
   bleed?: boolean;
 };
 
 export function Panel({
   title,
   icon,
+  iconClass,
   hint,
   actions,
   bleed = false,
@@ -30,22 +26,22 @@ export function Panel({
   return (
     <section
       className={cn(
-        "flex flex-col rounded-2xl border border-grey-50 bg-white",
+        "flex flex-col rounded-lg border border-grey-50 bg-white",
         className,
       )}
       {...props}
     >
       <header className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
-        <h2 className="flex items-center gap-2 text-md font-bold text-grey-900">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-grey-900">
           {icon ? (
-            <Icon icon={icon} size={20} className="text-primary" />
+            <Icon icon={icon} size={20} className={`text-primary ${iconClass || ""}`} />
           ) : null}
           {title}
           {hint ? (
             <Icon
               icon={InformationCircleIcon}
               size={14}
-              className="text-grey-300"
+              className="text-grey-200"
               aria-label={hint}
             />
           ) : null}
@@ -67,7 +63,6 @@ export function Panel({
   );
 }
 
-/** Compact pill select used for the period filters in panel headers. */
 export function PanelFilter({
   label,
   options,

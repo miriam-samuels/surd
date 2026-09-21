@@ -4,29 +4,13 @@ import { useState } from "react";
 import { Select as RadixSelect } from "radix-ui";
 import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/ui/icon";
-import {
-  INPUT_ICON_SIZES,
-  InputShell,
-  type InputSize,
-  type InputState,
-} from "@/components/ui/input";
+import { inputVariants } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
-
-/**
- * Select built on Radix, wearing the shared input shell so it lines up with
- * every other field.
- *
- *   <Select
- *     value={country}
- *     onValueChange={setCountry}
- *     options={[{ value: "ng", label: "Nigeria" }]}
- *   />
- */
 
 export type SelectOption = {
   value: string;
   label: string;
-  /** Rendered before the label in both the trigger and the list. */
+
   icon?: React.ReactNode;
 };
 
@@ -36,11 +20,11 @@ type SelectProps = {
   defaultValue?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
-  state?: InputState;
-  size?: InputSize;
+  variant?: "default" | "error" | "success";
+  inputSize?: "default" | "sm";
   disabled?: boolean;
   id?: string;
-  /** Narrow trigger for inline use, e.g. a currency picker. */
+
   compact?: boolean;
   className?: string;
 };
@@ -51,18 +35,13 @@ export function Select({
   defaultValue,
   onValueChange,
   placeholder = "Select",
-  state = "default",
-  size = "md",
+  variant = "default",
+  inputSize = "default",
   disabled = false,
   id,
   compact = false,
   className,
 }: SelectProps) {
-  /**
-   * Radix owns the value when uncontrolled, but the trigger still has to draw
-   * the selected option's icon — `Select.Value` only renders its text. Mirror
-   * the value locally so the icon is correct in both modes.
-   */
   const [internalValue, setInternalValue] = useState(defaultValue);
   const currentValue = value ?? internalValue;
   const selected = options.find((option) => option.value === currentValue);
@@ -80,12 +59,12 @@ export function Select({
       disabled={disabled}
     >
       <RadixSelect.Trigger asChild id={id}>
-        <InputShell
-          state={state}
-          size={size}
-          disabled={disabled}
+        <div
+          data-disabled={disabled || undefined}
           className={cn(
-            "cursor-pointer justify-between outline-none",
+            inputVariants({ variant, inputSize }),
+            "cursor-pointer items-center justify-between gap-2 outline-none",
+            disabled && "pointer-events-none opacity-50",
             compact && "w-auto",
             className,
           )}
@@ -97,11 +76,11 @@ export function Select({
           <RadixSelect.Icon>
             <Icon
               icon={ArrowDown01Icon}
-              size={INPUT_ICON_SIZES[size]}
-              className={state === "error" ? "text-red-500" : "text-grey-400"}
+              size={inputSize === "sm" ? 16 : 20}
+              className={variant === "error" ? "text-red-500" : "text-grey-400"}
             />
           </RadixSelect.Icon>
-        </InputShell>
+        </div>
       </RadixSelect.Trigger>
 
       <RadixSelect.Portal>

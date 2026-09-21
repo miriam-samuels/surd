@@ -1,318 +1,567 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ArrowDataTransferHorizontalIcon,
-  ArrowDownLeft01Icon,
-  ArrowUpRight01Icon,
-  UnavailableIcon,
+  ArrowDown02Icon,
+  ArrowRight02Icon,
+  ArrowUp02Icon,
+  ArrowUpDownIcon,
+  Download04Icon,
+  ExchangeIcon,
+  PlusSignIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  useAdminTransactionOverview,
+  useTransaction,
+  useTransactionReceipt,
+  useTransactions,
+} from "@/api";
+import { Button } from "@/components/ui/button";
+import { Can } from "@/components/auth/can";
+import { Flag } from "@/components/ui/flag";
+import { CapitalDialog } from "@/components/treasury/capital-dialog";
+import { CURRENCIES } from "@/constants/currency";
 import { Drawer } from "@/components/ui/drawer";
-import { FilterChip, MultiDropdown } from "@/components/ui/dropdown";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ReceiptIllustration } from "@/components/ui/illustrations";
+import { Dropdown } from "@/components/ui/dropdown";
+import { TableEmptyState } from "@/components/ui/empty-state";
+import {
+  AMOUNT_OPTIONS,
+  DATE_WINDOW_OPTIONS,
+  amountBounds,
+  dateBounds,
+} from "@/components/ui/filter-presets";
 import { Icon } from "@/components/ui/icon";
+import {
+  TableFilter,
+  TableSort,
+  type FilterGroup,
+  type FilterOption,
+} from "@/components/ui/table-controls";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchInput } from "@/components/ui/search-input";
-import { CurrencyChip } from "@/components/dashboard/editor-cell";
+import { Spinner } from "@/components/ui/spinner";
 import { OwnerCell } from "@/components/dashboard/owner-cell";
 import { Panel } from "@/components/dashboard/panel";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DataTable, type Column } from "@/components/ui/table";
+import { useDateRange } from "@/hooks/use-date-range";
+import { useTablePage } from "@/hooks/use-pagination";
+import { useDebounced } from "@/hooks/use-debounced";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import {
-  LEDGER_ENTRIES,
-  LEDGER_SUMMARY,
-  TRANSACTION_TYPES,
-  type LedgerEntry,
-} from "@/content/finance";
-import { cn } from "@/lib/cn";
+  formatChange,
+  formatCompactMoney,
+  formatEnum,
+  formatMoney,
+  formatName,
+  formatTimestamp,
+} from "@/lib/format";
+import {
+  Currency,
+  SortDirection,
+  TransactionCategory,
+  TransactionStatus,
+} from "@/types/enum";
+import { Permission } from "@/types/permission";
+import type { Transaction } from "@/types/transaction";
+import { useCurrency } from "@/contexts/currency";
 
-const TYPE_OPTIONS = TRANSACTION_TYPES.map((type) => ({
-  value: type,
-  label: type,
-}));
-
-const STATUS_OPTIONS = [
-  { value: "processing", label: "Processing" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
+/*
+ * The Type filter is `category`, the display taxonomy — not `type`, which is
+ * the storage enum. Driving both the column and the filter from it means they
+ * can never disagree, and it is a strict partition: the six buckets sum to the
+ * unfiltered total, so "none selected" and "all selected" return the same set.
+ *
+ * `ROI_CLAWBACK` is filter-only: a clawback has no row of its own, it rides on
+ * the break settlement that triggered it, which reports as `WITHDRAWAL`.
+ */
+const CATEGORY_OPTIONS = [
+  { value: TransactionCategory.Deposit, label: "Deposit" },
+  { value: TransactionCategory.Withdrawal, label: "Withdrawal" },
+  { value: TransactionCategory.Transfer, label: "Transfer" },
+  { value: TransactionCategory.RoiPayout, label: "ROI payout" },
+  { value: TransactionCategory.RoiClawback, label: "ROI clawback" },
+  { value: TransactionCategory.Conversion, label: "Conversion" },
+  { value: TransactionCategory.Other, label: "Other" },
 ];
 
-const PAGE_SIZE = 20;
+const STATUS_OPTIONS: FilterOption[] = [
+  { value: "", label: "All statuses" },
+  ...Object.values(TransactionStatus).map((status) => ({
+    value: status,
+    label: formatEnum(status),
+  })),
+];
 
-/**
- * The full ledger.
- *
- * This page drives `DataTable` in **server mode** — it owns `page` and slices
- * the data itself — because the real endpoint will be paged. Every other table
- * in the console uses the default client mode. Swapping the `useMemo` for a
- * fetch keyed on `page` is the only change needed to go live.
- */
+const CURRENCY_OPTIONS: FilterOption[] = CURRENCIES.map((entry) => ({
+  value: entry.value,
+  label: entry.label,
+  adornment: <Flag code={entry.country} size="sm" />,
+}));
+
+const TX_FILTERS: FilterGroup[] = [
+  { id: "status", label: "Status", options: STATUS_OPTIONS },
+  { id: "currency", label: "Currency", options: CURRENCY_OPTIONS },
+  {
+    id: "category",
+    label: "Type",
+    /* The display taxonomy, not `type` — sending both is a 400 rather than a
+       merge, and `category` is what the column renders. */
+    options: [{ value: "", label: "All types" }, ...CATEGORY_OPTIONS],
+  },
+  { id: "amount", label: "Amount", options: AMOUNT_OPTIONS },
+  /* No custom range here: the header's period control already bounds this
+     table, and a second, wider window inside the menu would silently override
+     it. The other tables have no such header, so they get the picker. */
+  { id: "date", label: "Date", options: DATE_WINDOW_OPTIONS },
+];
+
+
 export default function TransactionsPage() {
+  const { currency } = useCurrency();
   const [query, setQuery] = useState("");
-  const [types, setTypes] = useState<string[]>([]);
-  const [statuses, setStatuses] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
-  const detail = useDisclosure<LedgerEntry>();
+  const [filters, setFilters] = useState<Record<string, string | undefined>>({});
+  const [sort, setSort] = useState<SortDirection>(SortDirection.Desc);
+  const { page, setPage, pageSize, setPageSize } = useTablePage();
 
-  const filtered = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
-    return LEDGER_ENTRIES.filter((entry) => {
-      const matchesType = types.length === 0 || types.includes(entry.type);
-      const matchesStatus =
-        statuses.length === 0 || statuses.includes(entry.status);
-      const matchesQuery =
-        !trimmed ||
-        entry.reference.toLowerCase().includes(trimmed) ||
-        entry.owner.toLowerCase().includes(trimmed);
-      return matchesType && matchesStatus && matchesQuery;
-    });
-  }, [query, types, statuses]);
+  const detail = useDisclosure<Transaction>();
+  const capital = useDisclosure<void>();
+  const { key, setKey, range, options } = useDateRange();
+  const search = useDebounced(query);
 
-  /* Stand-in for the server: hand the table only the current page. */
-  const pageRows = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
-  );
+  const { data: overview, isLoading: loadingCards } = useAdminTransactionOverview({
+    currency,
+    start_date: range.start_date,
+  });
 
-  /** Any filter change invalidates the current page number. */
-  const resetTo = <T,>(setter: (value: T) => void) => {
-    return (value: T) => {
-      setter(value);
-      setPage(1);
-    };
+  const { data, isLoading } = useTransactions({
+    /* An explicit Currency pick beats the platform toggle — the admin who asked
+       for USD meant it. */
+    currency: (filters.currency as Currency) ?? currency,
+    search: search || undefined,
+    /* One category at a time: the input takes a single value, and sending it
+     * alongside `type`/`types` is a 400 rather than a merge. */
+    ...(filters.category
+      ? { category: filters.category as TransactionCategory }
+      : {}),
+    ...(filters.status ? { statuses: [filters.status as TransactionStatus] } : {}),
+    ...amountBounds(filters.amount),
+    sort,
+    /* Same precedence: the Date filter, else the header's period. */
+    ...(filters.date ? dateBounds(filters.date) : { start_date: range.start_date }),
+    page,
+    limit: pageSize,
+    paginate: true,
+  });
+
+  /* One row per currency, nothing converted — match on `currency` rather than
+   * trusting the position. */
+  const cards =
+    overview?.data?.find((row) => row.currency === currency) ?? overview?.data?.[0];
+
+  const reset = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value);
+    setPage(1);
   };
 
-  const columns: Column<LedgerEntry>[] = [
-    { id: "reference", header: "ID", cell: (row) => row.reference },
+  const columns: Column<Transaction>[] = [
     {
-      id: "owner",
+      id: "user",
       header: "User",
-      cell: (row) => <OwnerCell name={row.owner} email={row.ownerEmail} />,
+      cell: (row) =>
+        row.user ? (
+          <OwnerCell
+            name={formatName(row.user)}
+            email={row.user.email}
+            userId={row.user.id}
+          />
+        ) : (
+          <span className="text-grey-400">Unknown user</span>
+        ),
       width: "min-w-56",
     },
     {
-      id: "type",
-      header: "Type",
-      cell: (row) => (
-        <span className="flex items-center gap-2 whitespace-nowrap">
-          <Icon
-            icon={
-              row.flow === "credit" ? ArrowDownLeft01Icon : ArrowUpRight01Icon
-            }
-            size={16}
-            className={cn(
-              "shrink-0",
-              row.flow === "credit" ? "text-green-600" : "text-red-500",
-            )}
-          />
-          {row.type}
-        </span>
-      ),
+      id: "status",
+      header: "Status",
+      cell: (row) => <StatusBadge status={formatEnum(row.status)} />,
     },
     {
-      id: "currency",
-      header: "Currency",
-      cell: (row) => <CurrencyChip currency={row.currency} />,
+      id: "category",
+      header: "Type",
+      cell: (row) => formatEnum(row.category),
     },
     {
       id: "amount",
       header: "Amount",
       cell: (row) => (
-        <span className="font-semibold tabular-nums">{row.amount}</span>
+        <span className="font-semibold tabular-nums">
+          {formatMoney(row.amount, row.currency)}
+        </span>
       ),
-      align: "right",
-    },
-    {
-      id: "status",
-      header: "Status",
-      cell: (row) => <StatusBadge status={row.status} />,
     },
     {
       id: "flow",
       header: "Flow",
-      cell: (row) => (
-        <span className="flex items-center gap-2 whitespace-nowrap">
-          {row.source}
-          <span aria-hidden className="text-grey-300">
-            &rarr;
+      /* Both sides are derived server-side and come back human-readable, so
+         every screen labels the same movement identically. Render directly. */
+      /* Each side gets its own column and wraps on its own — "Card Payment"
+         beside "Flexi Wallet" on one line pushes every other column right. */
+      cell: (row) =>
+        row.flow ? (
+          <span className="flex items-center gap-2">
+            <span className="flex-1">{row.flow.source}</span>
+            <Icon icon={ArrowRight02Icon} size={16} className="shrink-0 text-grey-300" />
+            <span className="flex-1">{row.flow.destination}</span>
           </span>
-          {row.destination}
-        </span>
-      ),
+        ) : (
+          "—"
+        ),
       width: "min-w-56",
     },
-    { id: "timestamp", header: "Date & Time", cell: (row) => row.timestamp },
+    {
+      id: "created",
+      header: "Date & Time",
+      cell: (row) => formatTimestamp(row.created_at),
+    },
   ];
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Transaction history"
-        description="Every movement of money across the platform"
+        title="Transactions"
+        description="Complete system transaction ledger"
+        actions={
+          <div className="flex items-center gap-2">
+            <Dropdown
+              options={options}
+              value={key}
+              onChange={(next) => setKey(next as typeof key)}
+              className="w-34 rounded-lg border-grey-50"
+            />
+
+            {/* The same two-step flow Treasury owns, opened from the ledger the
+                movement lands in. One dialog, so a second entry point cannot
+                grow a different set of guard rails. */}
+            <Can do={Permission.TreasuryMove}>
+              <Button
+                tone="primary"
+                size="md"
+                shape="pill"
+                leadingIcon={PlusSignIcon}
+                onClick={() => capital.open()}
+              >
+                Add a Capital Record
+              </Button>
+            </Can>
+          </div>
+        }
       />
 
+      {/*
+        These four answer different questions and are not meant to reconcile:
+        volume counts every posting except CONVERT — ROI payouts, tax, internal
+        credits — while deposits and withdrawals are the two that net. The gap
+        between them is real.
+      */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Volume today"
-          value={LEDGER_SUMMARY.volumeToday}
-          icon={ArrowDataTransferHorizontalIcon}
-          hint="Total value moved since midnight"
+          label="Total TXs Volume"
+          value={
+            loadingCards
+              ? "…"
+              : formatCompactMoney(cards?.total_transaction_volume, currency)
+          }
+          icon={ArrowUpDownIcon}
+          /* A rate, not a movement — it has no direction to colour, so it is a
+             note rather than a delta. */
+          note={
+            loadingCards
+              ? undefined
+              : `${formatCompactMoney(cards?.average_daily_transaction_volume, currency)} Daily Average`
+          }
+          noteTone="neutral"
+          hint="Every posting except conversions, which write one row per side"
         />
         <StatCard
-          label="Deposits"
-          value={LEDGER_SUMMARY.deposits}
-          icon={ArrowDownLeft01Icon}
-          delta={{ value: "+12% vs yesterday", direction: "up" }}
+          label="Total Deposits"
+          value={loadingCards ? "…" : formatCompactMoney(cards?.total_deposits, currency)}
+          icon={ArrowDown02Icon}
+          delta={formatChange(
+            cards?.total_deposits_change_pct_vs_previous_period,
+            "vs previous period",
+          )}
         />
         <StatCard
-          label="Withdrawals"
-          value={LEDGER_SUMMARY.withdrawals}
-          icon={ArrowUpRight01Icon}
-          delta={{ value: "-8% vs yesterday", direction: "down" }}
+          label="Total Withdrawals"
+          value={loadingCards ? "…" : formatCompactMoney(cards?.total_withdrawals, currency)}
+          icon={ArrowUp02Icon}
+          delta={formatChange(
+            cards?.total_withdrawals_change_pct_vs_previous_period,
+            "vs previous period",
+          )}
         />
         <StatCard
-          label="Failed"
-          value={LEDGER_SUMMARY.failed}
-          icon={UnavailableIcon}
-          hint="Transactions that did not complete"
+          label="Net Flow"
+          value={loadingCards ? "…" : formatCompactMoney(cards?.net_flow, currency)}
+          icon={ExchangeIcon}
+          /* Negative when the platform paid out more than it took in. */
+          note={
+            cards && cards.net_flow < 0 ? "Paid out more than taken in" : undefined
+          }
+          noteTone="warning"
+          hint="Deposits minus withdrawals over the selected period"
         />
       </div>
 
       <Panel
-        title="All transactions"
-        icon={ArrowDataTransferHorizontalIcon}
+        title="Transactions History"
+        icon={ArrowUpDownIcon}
+        actions={
+          <>
+            <SearchInput
+              value={query}
+              onChange={reset(setQuery)}
+              className="w-full sm:w-72"
+            />
+            <TableFilter
+              groups={TX_FILTERS}
+              value={filters}
+              onChange={(next) => {
+                setFilters(next);
+                setPage(1);
+              }}
+            />
+            <TableSort value={sort} onChange={(next) => { setSort(next); setPage(1); }} />
+          </>
+        }
         bleed
       >
-        <div className="flex flex-wrap items-center gap-3 px-4 pb-5 sm:px-5">
-          <SearchInput
-            value={query}
-            onChange={resetTo(setQuery)}
-            className="w-full sm:w-72"
-          />
-
-          {types.length > 0 ? (
-            <FilterChip
-              label={types.length === 1 ? types[0] : `${types.length} Types`}
-              onRemove={() => {
-                setTypes([]);
-                setPage(1);
-              }}
-            />
-          ) : (
-            <MultiDropdown
-              options={TYPE_OPTIONS}
-              value={types}
-              onChange={resetTo(setTypes)}
-              label="All types"
-            />
-          )}
-
-          {statuses.length > 0 ? (
-            <FilterChip
-              label={
-                statuses.length === 1
-                  ? (STATUS_OPTIONS.find(
-                      (option) => option.value === statuses[0],
-                    )?.label ?? "Status")
-                  : `${statuses.length} Statuses`
-              }
-              onRemove={() => {
-                setStatuses([]);
-                setPage(1);
-              }}
-            />
-          ) : (
-            <MultiDropdown
-              options={STATUS_OPTIONS}
-              value={statuses}
-              onChange={resetTo(setStatuses)}
-              label="All statuses"
-            />
-          )}
-        </div>
-
         <div className="px-4 pb-5 sm:px-5">
           <DataTable
-            data={pageRows}
+            data={data?.data ?? []}
             columns={columns}
             getRowId={(row) => row.id}
+            isLoading={isLoading}
             onRowClick={detail.open}
-            minWidth="min-w-6xl"
+            minWidth="min-w-5xl"
             pagination={{
               mode: "server",
               page,
-              pageSize: PAGE_SIZE,
-              totalItems: filtered.length,
+              pageSize,
+              totalItems: data?.pagination?.total ?? 0,
               onPageChange: setPage,
+              onPageSizeChange: setPageSize,
             }}
             emptyState={
-              <EmptyState
-                icon={ArrowDataTransferHorizontalIcon}
-                title="No transactions match your filters"
-                description="Try a different search term or clear one of the filters."
+              <TableEmptyState
+                query={search}
+                onClearSearch={() => reset(setQuery)("")}
+                title="No Transactions Record Yet"
+                description="No transaction has been recorded yet. When customers deposit, withdraw or transfer, the ledger will fill in here."
               />
             }
           />
         </div>
       </Panel>
 
-      <TransactionDrawer control={detail} />
+      {detail.isOpen && detail.data ? (
+        <TransactionDrawer control={detail} row={detail.data} />
+      ) : null}
+      {capital.isOpen ? (
+        <CapitalDialog control={capital} kind="outflow" currency={currency} />
+      ) : null}
     </div>
   );
 }
 
-/** Full detail for one ledger entry, in a side drawer. */
 function TransactionDrawer({
   control,
+  row,
 }: {
-  control: ReturnType<typeof useDisclosure<LedgerEntry>>;
+  control: ReturnType<typeof useDisclosure<Transaction>>;
+  row: Transaction;
 }) {
-  const entry = control.data;
-
-  const fields = entry
-    ? [
-        { label: "Reference", value: entry.reference },
-        { label: "Type", value: entry.type },
-        { label: "Amount", value: entry.amount },
-        { label: "Currency", value: entry.currency },
-        { label: "Source", value: entry.source },
-        { label: "Destination", value: entry.destination },
-        { label: "Date & time", value: entry.timestamp },
-      ]
-    : [];
+  /* Opened against the detail query, which carries the fields the table does
+   * not select — balances either side, the invoice breakdown and the rate. */
+  const { data, isLoading } = useTransaction({ transaction_id: row.id });
+  const entry = data?.data ?? row;
 
   return (
     <Drawer
       control={control}
-      title="Transaction detail"
-      description={entry?.reference}
+      title="Transaction Detail"
       icon={ArrowDataTransferHorizontalIcon}
       width="md"
     >
-      {entry ? (
+      {isLoading ? (
+        <div className="grid py-16 place-items-center">
+          <Spinner size={28} className="text-primary" />
+        </div>
+      ) : (
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between gap-4 rounded-2xl bg-grey-25 p-4">
-            <OwnerCell name={entry.owner} email={entry.ownerEmail} />
-            <StatusBadge status={entry.status} size="md" />
+          {/* The headline: what happened, for how much, and when. Everything
+              below it is the evidence. */}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <ReceiptIllustration />
+            <StatusBadge status={formatEnum(entry.status)} size="md" />
+            <p className="text-heading-sm font-bold text-grey-900">
+              {formatMoney(entry.amount, entry.currency)}
+            </p>
+            <p className="text-sm text-grey-400">
+              {formatEnum(entry.category)} · {formatTimestamp(entry.created_at)}
+            </p>
           </div>
 
-          <dl className="flex flex-col divide-y divide-grey-50">
-            {fields.map((field) => (
-              <div
-                key={field.label}
-                className="flex items-center justify-between gap-4 py-3"
-              >
-                <dt className="text-sm text-grey-400">{field.label}</dt>
-                <dd className="text-sm font-semibold text-grey-900">
-                  {field.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <div className="overflow-hidden rounded-2xl border border-grey-50">
+            <p className="border-b border-grey-50 px-4 py-3 text-md font-semibold text-grey-900">
+              Payment Details
+            </p>
+
+            <dl className="flex flex-col divide-y divide-grey-50 px-4">
+              {/* The one place an id belongs: a support lookup starts here, and
+                  it is a field to copy rather than a column to scan. */}
+              <Row label="Transaction ID" value={entry.reference || entry.id} />
+              <Row label="Type" value={formatEnum(entry.category)} />
+              {entry.flow ? (
+                <>
+                  <Row label="Source" value={entry.flow.source} />
+                  <Row label="Destination" value={entry.flow.destination} />
+                </>
+              ) : null}
+              <Row
+                label="User"
+                value={
+                  entry.user ? (
+                    <OwnerCell
+                      name={formatName(entry.user)}
+                      email={entry.user.email}
+                      userId={entry.user.id}
+                    />
+                  ) : (
+                    "Unknown user"
+                  )
+                }
+              />
+              <Row label="Amount" value={formatMoney(entry.amount, entry.currency)} />
+              <Row label="Fee" value={formatMoney(entry.fees, entry.currency)} />
+              {/* `amount` excludes fees by definition — `total` is what the
+                  customer was actually charged, computed server-side. */}
+              <Row
+                label="Total"
+                value={formatMoney(entry.total, entry.currency)}
+                strong
+              />
+              {entry.roi_clawback_amount > 0 ? (
+                <Row
+                  label="Interest recovered"
+                  value={formatMoney(entry.roi_clawback_amount, entry.currency)}
+                />
+              ) : null}
+              {entry.savings_template ? (
+                <Row label="Plan type" value={formatEnum(entry.savings_template)} />
+              ) : null}
+              <Row label="Narration" value={entry.remark || "—"} />
+              <Row label="Method" value={formatEnum(entry.method)} />
+              {/* What makes a dispute traceable. */}
+              <Row
+                label="Balance before"
+                value={formatMoney(entry.pre_balance, entry.currency)}
+              />
+              <Row
+                label="Balance after"
+                value={formatMoney(entry.post_balance, entry.currency)}
+              />
+              <Row label="Completed" value={formatTimestamp(entry.completed_at)} />
+            </dl>
+          </div>
+
+          {entry.invoice ? (
+            <div className="rounded-2xl bg-grey-25 p-4">
+              <p className="mb-2 text-sm font-semibold text-grey-900">Breakdown</p>
+              <dl className="flex flex-col gap-1.5 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-grey-500">{entry.invoice.name ?? "Item"}</dt>
+                  <dd className="font-semibold text-grey-900">
+                    {formatMoney(entry.invoice.amount, entry.currency)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ) : null}
+
+          <ReceiptButton transaction={entry} />
         </div>
-      ) : null}
+      )}
     </Drawer>
+  );
+}
+
+/*
+ * The receipt is generated on request rather than with the drawer — it produces
+ * a PDF, so opening a row should not mint one nobody asked for. Completed
+ * transactions only.
+ */
+function ReceiptButton({ transaction }: { transaction: Transaction }) {
+  const [requested, setRequested] = useState(false);
+
+  const { data, isLoading } = useTransactionReceipt(
+    requested ? { transaction_id: transaction.id } : undefined,
+  );
+
+  if (transaction.status !== TransactionStatus.Completed) return null;
+
+  if (data?.url) {
+    return (
+      <Button tone="primary" size="xl" block leadingIcon={Download04Icon} asChild>
+        <a href={data.url} target="_blank" rel="noopener noreferrer">
+          Download receipt
+        </a>
+      </Button>
+    );
+  }
+
+  return (
+    /* One button, as the design has it — the PDF is still only minted on the
+       click, so opening a row does not produce a document nobody asked for. */
+    <Button
+      tone="primary"
+      size="xl"
+      block
+      leadingIcon={Download04Icon}
+      disabled={isLoading}
+      onClick={() => setRequested(true)}
+    >
+      {isLoading ? "Preparing receipt…" : "Download receipt"}
+    </Button>
+  );
+}
+
+function Row({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+
+  /** A component, so a row can carry the customer rather than their name. */
+  value: React.ReactNode;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3">
+      <dt className="text-sm text-grey-400">{label}</dt>
+      <dd
+        className={
+          strong
+            ? "text-sm font-semibold text-grey-900 truncate"
+            : "text-sm font-medium text-grey-900 truncate"
+        }
+      >
+        {value}
+      </dd>
+    </div>
   );
 }

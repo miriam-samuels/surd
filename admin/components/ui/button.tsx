@@ -1,21 +1,7 @@
 import { Slot } from "radix-ui";
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/cn";
-
-/**
- * The button primitive.
- *
- * Four independent axes, so any cell of the Figma matrix is reachable:
- *
- *   tone     which colour family        neutral | primary | danger | warning | success
- *   variant  how much weight it carries solid | soft | outline | ghost
- *   size     xs → xl
- *   shape    rounded | pill | square
- *
- * Icons are passed as data, not markup, so the button controls their size:
- *
- *   <Button leadingIcon={PlusSignIcon} trailingIcon={ArrowRight01Icon}>Save</Button>
- */
 
 export const BUTTON_TONES = [
   "neutral",
@@ -27,7 +13,7 @@ export const BUTTON_TONES = [
 
 export const BUTTON_VARIANTS = ["solid", "soft", "outline", "ghost"] as const;
 
-export const BUTTON_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
+export const BUTTON_SIZES = ["xs", "sm", "md", "lg", "xl", "xxl"] as const;
 
 export const BUTTON_SHAPES = ["rounded", "pill", "square"] as const;
 
@@ -36,7 +22,6 @@ export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 export type ButtonSize = (typeof BUTTON_SIZES)[number];
 export type ButtonShape = (typeof BUTTON_SHAPES)[number];
 
-/** Colour per tone × variant. Layout and typography live in `sizeStyles`. */
 const toneStyles: Record<ButtonTone, Record<ButtonVariant, string>> = {
   neutral: {
     solid: "bg-grey-1000 text-white hover:bg-grey-800",
@@ -87,15 +72,16 @@ const sizeStyles: Record<ButtonSize, string> = {
   md: "h-9 gap-2 px-3.5 text-sm",
   lg: "h-11 gap-2 px-4 text-sm",
   xl: "h-12 gap-2.5 px-5 text-md",
+  xxl: "h-15 gap-2.5 px-5 text-md",
 };
 
-/** Ghost buttons have no surface, so they lose the horizontal padding. */
 const ghostSizeStyles: Record<ButtonSize, string> = {
   xs: "h-7 gap-1.5 px-1 text-2xs",
   sm: "h-8 gap-1.5 px-1 text-xs",
   md: "h-9 gap-2 px-1.5 text-sm",
   lg: "h-11 gap-2 px-1.5 text-sm",
   xl: "h-12 gap-2.5 px-2 text-md",
+  xxl: "h-15 gap-2.5 px-5 text-md",
 };
 
 const shapeStyles: Record<ButtonShape, string> = {
@@ -104,13 +90,13 @@ const shapeStyles: Record<ButtonShape, string> = {
   square: "rounded-md",
 };
 
-/** Icons stay proportional to the label rather than to the button height. */
 export const BUTTON_ICON_SIZES: Record<ButtonSize, number> = {
   xs: 12,
   sm: 14,
   md: 16,
   lg: 16,
   xl: 20,
+  xxl: 30,
 };
 
 type ButtonProps = Omit<React.ComponentProps<"button">, "prefix"> & {
@@ -120,10 +106,10 @@ type ButtonProps = Omit<React.ComponentProps<"button">, "prefix"> & {
   shape?: ButtonShape;
   leadingIcon?: IconSvgElement;
   trailingIcon?: IconSvgElement;
-  /** Stretch to the width of the parent. */
   block?: boolean;
-  /** Render as the single child element instead of a `<button>`. */
   asChild?: boolean;
+  canSee?:boolean
+  loading?: boolean;
 };
 
 export function Button({
@@ -137,34 +123,50 @@ export function Button({
   asChild = false,
   className,
   children,
+  loading = false,
+  canSee = true,
+  disabled,
   ...props
 }: ButtonProps) {
   const Component = asChild ? Slot.Root : "button";
   const iconSize = BUTTON_ICON_SIZES[size];
+  const inert = disabled || loading;
+
+  if (!canSee) return null
 
   return (
     <Component
+
+      {...(asChild ? { "aria-disabled": inert || undefined } : { disabled: inert })}
+      aria-busy={loading || undefined}
+      data-loading={loading || undefined}
       className={cn(
         "inline-flex shrink-0 items-center justify-center font-semibold whitespace-nowrap",
         "transition-colors outline-none",
-        /* Solid buttons drop to a neutral surface when disabled rather than
-           fading the tone, which would read as a washed-out live control. */
-        variant === "solid"
-          ? "disabled:pointer-events-none disabled:bg-grey-50 disabled:text-grey-300"
-          : "disabled:pointer-events-none disabled:opacity-40",
+        "disabled:pointer-events-none",
+
+        !loading &&
+          (variant === "solid"
+            ? "disabled:bg-grey-50 disabled:text-grey-300"
+            : "disabled:opacity-40"),
         variant === "ghost" ? ghostSizeStyles[size] : sizeStyles[size],
         shapeStyles[shape],
         toneStyles[tone][variant],
         focusRings[tone],
-        /* `shrink` overrides the base `shrink-0` so two block buttons can
-           share a flex row without overflowing it. */
+
         block && "w-full shrink",
+        loading && "pointer-events-none",
         className,
       )}
       {...props}
     >
-      {leadingIcon ? <Icon icon={leadingIcon} size={iconSize} /> : null}
-      {/* Slottable keeps `asChild` working while icons sit outside the child. */}
+
+      {loading ? (
+        <Spinner size={iconSize} label="" className="shrink-0" />
+      ) : leadingIcon ? (
+        <Icon icon={leadingIcon} size={iconSize} />
+      ) : null}
+
       <Slot.Slottable>{children}</Slot.Slottable>
       {trailingIcon ? <Icon icon={trailingIcon} size={iconSize} /> : null}
     </Component>

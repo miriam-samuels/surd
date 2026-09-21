@@ -13,30 +13,6 @@ import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import type { Disclosure } from "@/hooks/use-disclosure";
 import { cn } from "@/lib/cn";
 
-/**
- * The console's modal.
- *
- * Two shapes, one component:
- *
- * `tone="form"` (default) — an icon-and-title header with your fields as
- * children and a Cancel / confirm footer. This is the Edit Rate, Invite Admin,
- * New Template dialog.
- *
- * `tone="success" | "warning" | "danger" | "info"` — a centred confirmation.
- * Passing one of these gives you the coloured badge, centred type and matching
- * confirm button for free, so a destructive prompt is one prop rather than a
- * hand-built layout:
- *
- *   <Dialog
- *     control={closeAccount}
- *     tone="danger"
- *     title="Are you sure you want to close this user account?"
- *     description="Closing this account will permanently disable access."
- *     confirmLabel="Yes, close"
- *     onConfirm={handleClose}
- *   />
- */
-
 export const DIALOG_TONES = [
   "form",
   "info",
@@ -91,19 +67,18 @@ const widths = {
 export type DialogWidth = keyof typeof widths;
 
 type DialogProps = {
-  /** From `useDisclosure()` — owns open state and any payload. */
   control: Pick<Disclosure<unknown>, "isOpen" | "setOpen" | "close">;
   title: string;
   description?: string;
   tone?: DialogTone;
   width?: DialogWidth;
-  /** Icon beside the title. `tone="form"` only; other tones use their own. */
+
   icon?: IconSvgElement;
   children?: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm?: () => void;
-  /** Disables the confirm button, e.g. while a form is invalid. */
+
   confirmDisabled?: boolean;
   isSubmitting?: boolean;
 };
@@ -132,7 +107,7 @@ export function Dialog({
         <RadixDialog.Content
           className={cn(
             "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2",
-            "max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl outline-none",
+            "max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl outline-none",
             widths[width],
           )}
         >
@@ -176,12 +151,12 @@ function CloseButton({ className }: { className?: string }) {
         type="button"
         aria-label="Close"
         className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-lg bg-grey-25 text-grey-500",
+          "grid size-10 shrink-0 place-items-center rounded-xl bg-grey-25 text-grey-500",
           "transition-colors hover:bg-grey-50 hover:text-grey-900",
           className,
         )}
       >
-        <Icon icon={Cancel01Icon} size={16} />
+        <Icon icon={Cancel01Icon} size={18} />
       </button>
     </RadixDialog.Close>
   );
@@ -211,9 +186,9 @@ function FormBody({
   return (
     <>
       <div className="flex items-start justify-between gap-4">
-        <RadixDialog.Title className="flex items-center gap-2 text-lg font-bold text-grey-900">
+        <RadixDialog.Title className="flex items-center gap-2.5 text-xl font-bold text-grey-900">
           {icon ? (
-            <Icon icon={icon} size={20} className="text-primary" />
+            <Icon icon={icon} size={24} className="text-primary" />
           ) : null}
           {title}
         </RadixDialog.Title>
@@ -229,7 +204,7 @@ function FormBody({
       {children ? <div className="mt-6 flex flex-col gap-5">{children}</div> : null}
 
       {confirmLabel ? (
-        <div className="mt-8 grid grid-cols-2 gap-3">
+        <div className="mt-8 grid grid-cols-2 gap-4">
           <RadixDialog.Close asChild>
             <Button variant="soft" size="xl" shape="pill" block>
               {cancelLabel}
@@ -305,7 +280,7 @@ function ConfirmationBody({
         {children}
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          {/* A single action reads as an acknowledgement, so the cancel drops. */}
+
           {onConfirm ? (
             <RadixDialog.Close asChild>
               <Button variant="soft" size="xl" shape="pill">

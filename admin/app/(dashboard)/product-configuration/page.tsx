@@ -28,7 +28,7 @@ import {
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DataTable, type Column } from "@/components/ui/table";
 import { TabPanel, Tabs } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/toast";
+import { toast } from "@/components/ui/toast";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import {
   FEE_TYPES,
@@ -52,12 +52,6 @@ const PRODUCT_ICONS: Record<ProductId, IconSvgElement> = {
   "flexi-wallet": Wallet01Icon,
 };
 
-/**
- * Configuration for the three savings products.
- *
- * A product selector picks the panel; each panel is its own component below so
- * the differences between them stay visible rather than buried in conditionals.
- */
 export default function ProductConfigurationPage() {
   const [product, setProduct] = useState<ProductId>("target-savings");
 
@@ -108,7 +102,6 @@ export default function ProductConfigurationPage() {
   );
 }
 
-/** Shell shared by the three panels: pill tabs on the left, action on the right. */
 function ConfigPanel({
   tabs,
   value,
@@ -130,19 +123,15 @@ function ConfigPanel({
         onValueChange={onValueChange}
         variant="pill"
         className="gap-6"
-        listClassName="justify-between"
+        action={action}
       >
-        {action}
         {children}
       </Tabs>
     </section>
   );
 }
 
-/* --------------------------------------------------------- target savings */
-
 function TargetSavingsPanel() {
-  const toast = useToast();
   const [view, setView] = useState("templates");
   const newTemplate = useDisclosure();
   const editFee = useDisclosure<FeeCharge>();
@@ -183,7 +172,6 @@ function TargetSavingsPanel() {
             size="xl"
             shape="pill"
             leadingIcon={PlusSignIcon}
-            className="ml-auto"
             onClick={() => newTemplate.open()}
           >
             New Template
@@ -206,23 +194,20 @@ function TargetSavingsPanel() {
       <NewTemplateDialog
         control={newTemplate}
         onSave={() =>
-          toast.show({ tone: "success", message: "Template created." })
+          toast({ tone: "success", message: "Template created." })
         }
       />
       <EditConfigurationDialog
         control={editFee}
         onSave={() =>
-          toast.show({ tone: "success", message: "Configuration updated." })
+          toast({ tone: "success", message: "Configuration updated." })
         }
       />
     </>
   );
 }
 
-/* ---------------------------------------------------------- fixed deposit */
-
 function FixedDepositPanel() {
-  const toast = useToast();
   const [view, setView] = useState("tenure");
   const newTenure = useDisclosure();
   const editFee = useDisclosure<FeeCharge>();
@@ -278,7 +263,6 @@ function FixedDepositPanel() {
             size="xl"
             shape="pill"
             leadingIcon={PlusSignIcon}
-            className="ml-auto"
             onClick={() => newTenure.open()}
           >
             New Tenure
@@ -305,22 +289,19 @@ function FixedDepositPanel() {
 
       <NewTenureDialog
         control={newTenure}
-        onSave={() => toast.show({ tone: "success", message: "Tenure created." })}
+        onSave={() => toast({ tone: "success", message: "Tenure created." })}
       />
       <EditConfigurationDialog
         control={editFee}
         onSave={() =>
-          toast.show({ tone: "success", message: "Configuration updated." })
+          toast({ tone: "success", message: "Configuration updated." })
         }
       />
     </>
   );
 }
 
-/* ----------------------------------------------------------- flexi wallet */
-
 function FlexiWalletPanel() {
-  const toast = useToast();
   const editFee = useDisclosure<FeeCharge>();
 
   const columns: Column<FlexiRate>[] = [
@@ -364,14 +345,12 @@ function FlexiWalletPanel() {
       <EditConfigurationDialog
         control={editFee}
         onSave={() =>
-          toast.show({ tone: "success", message: "Configuration updated." })
+          toast({ tone: "success", message: "Configuration updated." })
         }
       />
     </>
   );
 }
-
-/* ------------------------------------------------------------------ pieces */
 
 function EditButton({ onClick }: { onClick: () => void }) {
   return (
@@ -427,7 +406,6 @@ function FeesTable({
   );
 }
 
-/** Two-up currency toggles, as used by several configuration dialogs. */
 function CurrencyToggles({
   selected,
   onToggle,
@@ -500,7 +478,7 @@ function EditConfigurationDialog({
       </Field>
 
       <Field label="Value(%)" htmlFor="config-value">
-        <NumberInput id="config-value" size="lg" defaultValue={1} />
+        <NumberInput id="config-value" defaultValue={1} />
       </Field>
 
       <Field label="Applicable Currency">
@@ -513,9 +491,8 @@ function EditConfigurationDialog({
       <Field label="Effective date" htmlFor="config-date">
         <Input
           id="config-date"
-          size="lg"
           defaultValue="12/12/2026"
-          trailingIcon={Calendar03Icon}
+          rightIcon={<Icon icon={Calendar03Icon} size={20} />}
         />
       </Field>
     </Dialog>
@@ -544,7 +521,7 @@ function NewTemplateDialog({
       }}
     >
       <Field label="Template name" htmlFor="template-name">
-        <Input id="template-name" size="lg" placeholder="30 days" />
+        <Input id="template-name" placeholder="30 days" />
       </Field>
 
       <Field label="Template image">
@@ -585,7 +562,7 @@ function NewTemplateDialog({
       </Field>
 
       <Field label="Duration" htmlFor="template-duration">
-        <NumberInput id="template-duration" size="lg" defaultValue={30} />
+        <NumberInput id="template-duration" defaultValue={30} />
       </Field>
     </Dialog>
   );
@@ -612,7 +589,7 @@ function NewTenureDialog({
       }}
     >
       <Field label="Duration" htmlFor="tenure-duration">
-        <Input id="tenure-duration" size="lg" placeholder="30 days" />
+        <Input id="tenure-duration" placeholder="30 days" />
       </Field>
 
       <Field label="Applicable Currency">
@@ -623,15 +600,14 @@ function NewTenureDialog({
       </Field>
 
       <Field label="Rate(%)" htmlFor="tenure-rate">
-        <NumberInput id="tenure-rate" size="lg" defaultValue={2} />
+        <NumberInput id="tenure-rate" defaultValue={2} />
       </Field>
 
       <Field label="Effective date" htmlFor="tenure-date">
         <Input
           id="tenure-date"
-          size="lg"
           defaultValue="12/12/2026"
-          trailingIcon={Calendar03Icon}
+          rightIcon={<Icon icon={Calendar03Icon} size={20} />}
         />
       </Field>
     </Dialog>

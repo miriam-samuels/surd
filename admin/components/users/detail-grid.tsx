@@ -1,17 +1,9 @@
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { cn } from "@/lib/cn";
 
-/**
- * The labelled key/value grid used by the Profile and Account cards.
- *
- * Fields are declared as data so a card is a list, not a wall of markup:
- *
- *   <DetailGrid fields={[{ label: "Email", value: user.email, icon: Mail01Icon }]} />
- */
-
 export type DetailField = {
   label: string;
-  /** A node, so a field can render a badge or a chip rather than text. */
+
   value: React.ReactNode;
   icon?: IconSvgElement;
 };

@@ -1,31 +1,20 @@
 "use client";
-
-import { useState } from "react";
 import {
-  ArrowDown01Icon,
-  Menu01Icon,
-  Notification03Icon,
   Search01Icon,
   SidebarLeft01Icon,
+  PanelLeftIcon,
+  BellIcon
 } from "@hugeicons/core-free-icons";
-import { Avatar } from "@/components/ui/avatar";
+import { useCurrency } from "@/contexts/currency";
+
 import { Flag } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { Dropdown } from "@/components/ui/dropdown";
+import { AccountMenu } from "@/components/dashboard/account-menu";
 import { cn } from "@/lib/cn";
-
-/**
- * The bar above the workspace: navigation toggles, search, and account chrome.
- *
- * Two separate toggles rather than one that changes meaning — the hamburger
- * opens the drawer below `lg`, the rail button collapses the sidebar above it.
- */
-
-const CURRENCIES = [
-  { value: "NGN", label: "NGN", country: "NG" },
-  { value: "USD", label: "USD", country: "US" },
-  { value: "GBP", label: "GBP", country: "GB" },
-];
+import { Input } from "../ui/input";
+import { Currency } from "@/types/enum";
+import { CURRENCIES } from "@/constants/currency";
 
 type DashboardTopbarProps = {
   onOpenDrawer: () => void;
@@ -40,11 +29,10 @@ export function DashboardTopbar({
   collapsed,
   notificationCount = 0,
 }: DashboardTopbarProps) {
-  /* Display currency for every figure in the console. */
-  const [currency, setCurrency] = useState("NGN");
+  const { currency, setCurrency } = useCurrency();
 
   return (
-    /* No `sticky` needed — the shell never scrolls, only the workspace below. */
+
     <header className="z-30 flex h-16 shrink-0 items-center gap-3 border-b border-grey-50 bg-white px-4 sm:px-6">
       <button
         type="button"
@@ -52,7 +40,7 @@ export function DashboardTopbar({
         aria-label="Open navigation"
         className="grid size-9 shrink-0 place-items-center rounded-lg text-grey-500 hover:bg-grey-25 lg:hidden"
       >
-        <Icon icon={Menu01Icon} size={20} />
+        <Icon icon={PanelLeftIcon} size={20} />
       </button>
 
       <button
@@ -65,23 +53,19 @@ export function DashboardTopbar({
         <Icon icon={SidebarLeft01Icon} size={20} />
       </button>
 
-      <label className="relative hidden min-w-0 flex-1 items-center sm:flex md:max-w-sm">
-        <Icon
-          icon={Search01Icon}
-          size={16}
-          className="pointer-events-none absolute left-3 text-grey-300"
-        />
-        <span className="sr-only">Search</span>
-        <input
-          type="search"
-          placeholder="Search..."
-          className={cn(
-            "h-10 w-full rounded-lg border border-grey-50 bg-white pl-9 pr-3 text-sm",
-            "outline-none transition-colors placeholder:text-grey-300",
-            "focus:border-grey-300 focus:shadow-ring-gray",
-          )}
-        />
-      </label>
+
+      <Input
+        type="search"
+        placeholder="Search..."
+        leftIcon={
+          <Icon
+            icon={Search01Icon}
+            size={16}
+          />}
+        className={cn(
+          "bg-grey-50 text-sm h-10 w-60",
+        )}
+      />
 
       <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
         <Dropdown
@@ -91,7 +75,7 @@ export function DashboardTopbar({
             icon: <Flag code={currency.country} size="sm" />,
           }))}
           value={currency}
-          onChange={setCurrency}
+          onChange={(value) => setCurrency(value as Currency)}
           align="end"
           className="hidden sm:inline-flex"
         />
@@ -101,26 +85,15 @@ export function DashboardTopbar({
           aria-label={`Notifications${notificationCount ? `, ${notificationCount} unread` : ""}`}
           className="relative grid size-9 place-items-center rounded-full text-grey-500 hover:bg-grey-25"
         >
-          <Icon icon={Notification03Icon} size={20} />
+          <Icon icon={BellIcon} size={20} />
           {notificationCount > 0 ? (
-            <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
               {notificationCount}
             </span>
           ) : null}
         </button>
 
-        <button
-          type="button"
-          aria-label="Account menu"
-          className="flex items-center gap-1.5 rounded-full outline-none focus-visible:shadow-ring-primary"
-        >
-          <Avatar name="Surd Admin" size="sm" tone="inverse" />
-          <Icon
-            icon={ArrowDown01Icon}
-            size={16}
-            className="hidden text-grey-400 sm:block"
-          />
-        </button>
+        <AccountMenu />
       </div>
     </header>
   );

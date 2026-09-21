@@ -17,21 +17,16 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@/components/ui/icon";
 import { ROUTES } from "@/constants/routes";
-
-/**
- * The admin sidebar, as data.
- *
- * Paths come from `@/constants/routes` so renaming a route updates the nav
- * automatically. The first group has no title, matching the design where
- * "Dashboard" sits alone above the labelled sections.
- */
+import { Permission } from "@/types/permission";
 
 export type NavItem = {
   label: string;
   href: string;
   icon: IconSvgElement;
-  /** Optional count rendered as a pill on the right. */
+
   badge?: number;
+
+  permission?: Permission;
 };
 
 export type NavGroup = {
@@ -47,6 +42,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
       {
         label: "Dashboard",
         href: ROUTES.dashboard,
+        permission: Permission.DashboardView,
         icon: DashboardSquare02Icon,
       },
     ],
@@ -58,15 +54,37 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
       {
         label: "Flexi Wallet",
         href: ROUTES.finance.flexiWallet,
+        permission: Permission.FinanceView,
         icon: Wallet01Icon,
       },
-      { label: "Savings", href: ROUTES.finance.savings, icon: PiggyBankIcon },
-      { label: "ROI", href: ROUTES.finance.roi, icon: MoneyBag02Icon },
-      { label: "Vault", href: ROUTES.finance.vault, icon: SecurityLockIcon },
-      { label: "Treasury", href: ROUTES.finance.treasury, icon: BankIcon },
+      {
+        label: "Savings",
+        href: ROUTES.finance.savings,
+        permission: Permission.FinanceView,
+        icon: PiggyBankIcon,
+      },
+      {
+        label: "ROI",
+        href: ROUTES.finance.roi,
+        permission: Permission.FinanceView,
+        icon: MoneyBag02Icon,
+      },
+      {
+        label: "Vault",
+        href: ROUTES.finance.vault,
+        permission: Permission.FinanceView,
+        icon: SecurityLockIcon,
+      },
+      {
+        label: "Treasury",
+        href: ROUTES.finance.treasury,
+        permission: Permission.TreasuryMove,
+        icon: BankIcon,
+      },
       {
         label: "Transaction history",
         href: ROUTES.finance.transactions,
+        permission: Permission.FinanceView,
         icon: ArrowDataTransferHorizontalIcon,
       },
     ],
@@ -75,10 +93,16 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     id: "users",
     title: "Users",
     items: [
-      { label: "User List", href: ROUTES.users.list, icon: UserGroupIcon },
+      {
+        label: "User List",
+        href: ROUTES.users.list,
+        permission: Permission.UsersView,
+        icon: UserGroupIcon,
+      },
       {
         label: "KYC & Compliance",
         href: ROUTES.users.kyc,
+        permission: Permission.KycView,
         icon: DocumentValidationIcon,
       },
     ],
@@ -87,10 +111,16 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     id: "configurations",
     title: "Configurations",
     items: [
-      { label: "Rates", href: ROUTES.configurations.rates, icon: PercentIcon },
+      {
+        label: "Rates",
+        href: ROUTES.configurations.rates,
+        permission: Permission.ConfigView,
+        icon: PercentIcon,
+      },
       {
         label: "Product Configuration",
         href: ROUTES.configurations.products,
+        permission: Permission.ConfigView,
         icon: Settings02Icon,
       },
     ],
@@ -102,21 +132,25 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
       {
         label: "Admin accounts",
         href: ROUTES.settings.admins,
+        permission: Permission.AdminsManage,
         icon: UserSettings01Icon,
       },
       {
         label: "Content & Marketing",
         href: ROUTES.settings.content,
+        permission: Permission.ContentManage,
         icon: News01Icon,
       },
       {
         label: "Platform Configuration",
         href: ROUTES.settings.platform,
+        permission: Permission.PlatformManage,
         icon: CodeIcon,
       },
       {
         label: "Audit Logs",
         href: ROUTES.settings.auditLogs,
+        permission: Permission.AuditView,
         icon: Task01Icon,
       },
     ],

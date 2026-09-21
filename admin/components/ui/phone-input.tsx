@@ -1,32 +1,17 @@
 "use client";
 
 import { Flag } from "@/components/ui/flag";
-import { Input, type InputSize, type InputState } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 
-/**
- * Dialling-code picker beside a national number, as two separate fields —
- * they validate independently, so they read and focus independently too.
- *
- *   <PhoneInput
- *     countries={DIAL_CODES}
- *     country={country}
- *     onCountryChange={setCountry}
- *     value={number}
- *     onChange={(e) => setNumber(e.target.value)}
- *   />
- */
-
 export type DialCode = {
-  /** ISO 3166-1 alpha-2, used for the flag. */
   code: string;
-  /** Dialling prefix including "+". */
+
   dial: string;
   name: string;
 };
 
-/** A starter set — extend per market rather than shipping every country. */
 export const DIAL_CODES: DialCode[] = [
   { code: "NG", dial: "+234", name: "Nigeria" },
   { code: "GH", dial: "+233", name: "Ghana" },
@@ -51,16 +36,16 @@ type PhoneInputProps = Omit<
   countries?: DialCode[];
   country?: string;
   onCountryChange?: (dial: string) => void;
-  state?: InputState;
-  size?: InputSize;
+  variant?: "default" | "error" | "success";
+  inputSize?: "default" | "sm";
 };
 
 export function PhoneInput({
   countries = DIAL_CODES,
   country,
   onCountryChange,
-  state = "default",
-  size = "md",
+  variant = "default",
+  inputSize = "default",
   disabled,
   className,
   ...props
@@ -72,8 +57,8 @@ export function PhoneInput({
         value={country}
         onValueChange={onCountryChange}
         defaultValue={countries[0]?.dial}
-        state={state}
-        size={size}
+        variant={variant}
+        inputSize={inputSize}
         disabled={disabled}
         compact
         className="w-28 shrink-0"
@@ -81,8 +66,8 @@ export function PhoneInput({
       <Input
         type="tel"
         inputMode="tel"
-        state={state}
-        size={size}
+        variant={variant}
+        inputSize={inputSize}
         disabled={disabled}
         {...props}
       />

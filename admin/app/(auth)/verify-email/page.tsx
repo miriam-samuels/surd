@@ -1,17 +1,18 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { useAdminLogin, useAdminVerifyLogin } from "@/api/auth/auth";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { OtpInput } from "@/components/ui/otp-input";
+import { DEFAULT_AUTHENTICATED_ROUTE, ROUTES } from "@/constants/routes";
+import { useSession } from "@/contexts/session";
+import { useNavigate } from "@/hooks/use-navigate";
+import { deviceContext } from "@/lib/device";
+import type { APIError } from "@/types/api";
 
-/**
- * Step two: confirm the six-digit code.
- *
- * Wrapped in Suspense because `useSearchParams` opts the tree into client-side
- * rendering, and Next requires a boundary around that during prerender.
- */
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={<VerifySkeleton />}>
@@ -21,18 +22,52 @@ export default function VerifyEmailPage() {
 }
 
 const CODE_LENGTH = 6;
+
+/** Only used if the challenge did not carry its own clock. */
 const RESEND_SECONDS = 119;
 
 function VerifyEmailForm() {
-  const router = useRouter();
   const params = useSearchParams();
-  const email = params.get("email");
+  const router = useNavigate();
+  const { signIn } = useSession();
+
+  const email = params.get("email") ?? "";
+  const next = params.get("next");
 
   const [code, setCode] = useState("");
-  const [error, setError] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
+  const [error, setError] = useState<APIError | null>(null);
+  const resendParam = params.get("resend");
+  const [secondsLeft, setSecondsLeft] = useState(
+    resendParam === null ? RESEND_SECONDS : Math.max(0, Number(resendParam) || 0),
+  );
 
-  /* Count down to the moment the code can be resent. */
+  const verify = useAdminVerifyLogin({
+    silent: true,
+    onSuccess: (response) => {
+      if (!response.data) {
+        setError(null);
+        return;
+      }
+      signIn(response.data);
+      router.replace(next ?? DEFAULT_AUTHENTICATED_ROUTE);
+    },
+    onError: (failure) => {
+      setError(failure);
+      setCode("");
+    },
+  });
+
+  const resend = useAdminLogin({
+    silent: true,
+    onSuccess: (response) =>
+      setSecondsLeft(response.data?.resend_after_seconds ?? RESEND_SECONDS),
+    onError: setError,
+  });
+
+  useEffect(() => {
+    if (!email) router.replace(ROUTES.login);
+  }, [email, router]);
+
   useEffect(() => {
     if (secondsLeft <= 0) return;
     const timer = window.setInterval(
@@ -42,21 +77,17 @@ function VerifyEmailForm() {
     return () => window.clearInterval(timer);
   }, [secondsLeft]);
 
-  const verify = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (code.length < CODE_LENGTH) return;
-    /* No auth backend yet — treat any code as incorrect to show the state. */
-    setError(true);
-  };
+  const busy = verify.isPending || router.isNavigating;
 
-  const resend = () => {
-    setCode("");
-    setError(false);
-    setSecondsLeft(RESEND_SECONDS);
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (code.length < CODE_LENGTH || busy) return;
+    setError(null);
+    verify.mutate({ email, code, ...deviceContext() });
   };
 
   return (
-    <form onSubmit={verify} className="flex flex-col gap-6">
+    <form onSubmit={submit} className="flex flex-col gap-6">
       <Button
         type="button"
         variant="outline"
@@ -64,16 +95,16 @@ function VerifyEmailForm() {
         size="md"
         className="w-fit"
         leadingIcon={ArrowLeft02Icon}
-        onClick={() => router.push("/login")}
+        onClick={() => router.push(ROUTES.login)}
       >
         Back
       </Button>
 
-      <div className="flex flex-col gap-3">
-        <h1 className="text-heading-xs font-bold text-grey-900">
+      <div className="flex flex-col gap-6">
+        <h1 className="text-heading-xs font-semibold text-grey-900">
           Verify your email address
         </h1>
-        <p className="text-md text-grey-500">
+        <p className="text-md text-grey-500 font-medium">
           Please enter the {CODE_LENGTH}-digit code sent to{" "}
           {email ? (
             <span className="font-semibold text-grey-900">{email}</span>
@@ -86,37 +117,50 @@ function VerifyEmailForm() {
 
       <OtpInput
         value={code}
-        onChange={(next) => {
-          setCode(next);
-          setError(false);
+        onChange={(nextCode) => {
+          setCode(nextCode);
+          if (error) setError(null);
         }}
         length={CODE_LENGTH}
         state={error ? "error" : "default"}
       />
 
-      {secondsLeft > 0 && !error ? (
+      {error ? (
+        <Alert tone="warning" title="That didn't work.">
+          {error.message}
+        </Alert>
+      ) : null}
+
+      {secondsLeft > 0 ? (
         <p className="text-sm text-grey-300">
           Resend code in {formatCountdown(secondsLeft)}
         </p>
       ) : (
         <button
           type="button"
-          onClick={resend}
-          className="w-fit text-sm font-bold text-orange-500 outline-none hover:underline focus-visible:underline"
+          onClick={() => {
+            setCode("");
+            setError(null);
+            resend.mutate({ email });
+          }}
+          disabled={resend.isPending}
+          className="w-fit text-sm font-bold text-orange-500 outline-none hover:underline focus-visible:underline disabled:opacity-50"
         >
-          Resend code
+          {resend.isPending ? "Sending…" : "Resend code"}
         </button>
       )}
 
       <Button
         type="submit"
         tone="primary"
-        size="xl"
+        size="xxl"
         shape="pill"
         block
-        disabled={code.length < CODE_LENGTH}
+        loading={busy}
+        disabled={code.length < CODE_LENGTH || busy}
+        className="mt-5"
       >
-        Verify code
+        Verify Code
       </Button>
     </form>
   );

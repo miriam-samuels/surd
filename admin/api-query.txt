@@ -1,0 +1,2316 @@
+query Query($input: AdminUserInput!, $adminKycInput2: AdminKYCUserInput!, $adminFundsBreakdownInput2: AdminBreakdownInput!, $signinInput2: SigninInput!, $cardsInput2: CardFilterInput!, $cardInput2: CardFilterInput!, $faqId: ID!, $lienInput2: LienFilterInput!, $linkedAccountInput2: LinkedAccountFilterInput!, $existInput2: KeyValInput!, $productInput2: ProductFilterInput!, $ratesInput2: RateFilter!, $savingInput2: SavingFilterInput!, $templateId: ID!, $transactionInput2: TransactionFilterInput!, $transactionsInput2: TransactionFilterInput!, $statementInput2: StatementFilterInput!, $emailVerificationInput2: EmailVerificationInput!, $emailConfirmationInput2: EmailConfirmationInput!, $phoneVerificationInput2: PhoneVerificationInput!, $phoneConfirmationInput2: PhoneConfirmationInput!, $walletsInput2: WalletFilter!, $representations: [_Any!]!, $adminKycOverviewInput2: AdminKYCOverviewInput, $adminKyCsInput2: AdminKYCFilterInput, $adminOverviewMetricsInput2: AdminCurrencyInput, $adminRoiByProductInput2: AdminDateRangeInput, $adminRoiFlowSeriesInput2: AdminSeriesInput, $adminRoiOverviewInput2: AdminCurrencyInput, $adminSavingsBalanceSeriesInput2: AdminSeriesInput, $adminSavingsByTypeInput2: AdminDateRangeInput, $adminSavingsMaturityTimelineInput2: AdminSeriesInput, $adminSavingsOverviewInput2: AdminDateRangeInput, $adminSystemFundsInput2: AdminSeriesInput, $adminTransactionOverviewInput2: AdminCurrencyInput, $adminUsersInput2: AdminUsersFilterInput, $adminUsersOverviewInput2: AdminUsersOverviewInput, $adminWalletBalanceSeriesInput2: AdminSeriesInput, $adminWalletOverviewInput2: AdminDateRangeInput, $balanceInput2: SavingFilterInput, $faqsInput2: FAQFilterInput, $liensInput2: LienFilterInput, $linkedAccountsInput2: LinkedAccountFilterInput, $targetPlanTemplatesInput2: TargetPlanTemplateFilterInput) {
+  ping {
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on Response {
+      message
+      url
+    }
+  }
+  accountLimits {
+    ... on ResponseWithAccountLimit {
+      message
+      data {
+        minimum_account_balance
+        maximum_account_balance
+        current_portfolio_balance
+        maximum_total_withdrawals_per_day
+        current_total_withdrawals_today
+        remaining_daily_withdrawal_limit
+        maximum_amount_per_withdrawal
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminOverviewMetrics(input: $adminOverviewMetricsInput2) {
+    ... on ResponseWithAdminOverviewMetrics {
+      message
+      data {
+        currency
+        total_funds
+        total_funds_change_pct
+        total_savings_balance
+        total_savings_balance_change_pct
+        total_roi_liability
+        total_roi_liability_today
+        pending_withdrawals
+        pending_withdrawals_count
+        total_capital_outflow
+        capital_outflow_health_balance
+        daily_deposits
+        daily_deposits_change_pct
+        daily_withdrawals
+        daily_withdrawals_change_pct
+        liquidity_ratio
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminWalletOverview(input: $adminWalletOverviewInput2) {
+    ... on ResponseWithAdminWalletOverview {
+      message
+      data {
+        currency
+        total_wallet_balance
+        total_wallet_balance_change_pct
+        total_savings_balance
+        total_savings_balance_change_pct
+        total_flexi_balance
+        total_flexi_balance_today
+        total_deposits
+        total_deposits_change_pct
+        total_withdrawals
+        total_withdrawals_change_pct
+        large_transactions_count
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminWalletBalanceSeries(input: $adminWalletBalanceSeriesInput2) {
+    ... on ResponseWithAdminWalletBalanceSeries {
+      message
+      data {
+        date
+        flexi_balance
+        savings_balance
+        total_wallet_balance
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminTransactionOverview(input: $adminTransactionOverviewInput2) {
+    ... on ResponseWithAdminTransactionOverview {
+      message
+      data {
+        currency
+        total_transaction_volume
+        total_deposits
+        total_withdrawals
+        savings_funding
+        roi_withdrawals
+        today_transaction_volume
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminUsersOverview(input: $adminUsersOverviewInput2) {
+    ... on ResponseWithAdminUsersOverview {
+      message
+      data {
+        total_users
+        active_users
+        suspended_users
+        frozen_users
+        hnis
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminUsers(input: $adminUsersInput2) {
+    ... on ResponseWithAdminUsers {
+      message
+      data {
+        id
+        firstname
+        middlename
+        lastname
+        fullname
+        email
+        avatar
+        status
+        tier
+        kyc_level
+        total_balance_ngn
+        total_balance_usd
+        fixed_deposits_ngn
+        fixed_deposits_usd
+        target_savings_ngn
+        target_savings_usd
+        joined_at
+      }
+      pagination {
+        page
+        limit
+        pages
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminUser(input: $input) {
+    ... on ResponseWithUser {
+      message
+      data {
+        id
+        firstname
+        middlename
+        lastname
+        email
+        phone
+        phone_code
+        gender
+        country
+        username
+        language
+        tier
+        dob
+        passcode
+        pin_set
+        referral
+        avatar
+        internal
+        role
+        status
+        created_at
+        updated_at
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminKYCOverview(input: $adminKycOverviewInput2) {
+    ... on ResponseWithAdminKYCOverview {
+      message
+      data {
+        pending_reviews
+        rejected_reviews
+        suspended_accounts
+        frozen_accounts
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminKYCs(input: $adminKyCsInput2) {
+    ... on ResponseWithKYCs {
+      message
+      data {
+        id
+        user_id
+        status
+        bvn
+        bvn_meta
+        nin
+        nin_meta
+        id_document
+        id_url
+        face_map
+        marital_status
+        income_range
+        work_industry
+        created_at
+        updated_at
+      }
+      pagination {
+        page
+        limit
+        pages
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminKYC(input: $adminKycInput2) {
+    ... on ResponseWithKYC {
+      message
+      data {
+        id
+        user_id
+        status
+        bvn
+        bvn_meta
+        nin
+        nin_meta
+        id_document
+        id_url
+        face_map
+        marital_status
+        next_of_kin {
+          firstname
+          lastname
+          email
+          address
+          phone
+          phone_code
+          relationship
+        }
+        income_range
+        work_industry
+        created_at
+        updated_at
+        user {
+          id
+          firstname
+          middlename
+          lastname
+          email
+          phone
+          phone_code
+          gender
+          country
+          username
+          language
+          tier
+          dob
+          passcode
+          pin_set
+          referral
+          avatar
+          internal
+          role
+          status
+          address {
+            id
+            user_id
+            state
+            city
+            house_number
+            address_meta
+            street
+            zip
+            verified
+            created_at
+            updated_at
+          }
+          security_setting {
+            id
+            user_id
+            appearance_mode
+            push_enabled
+            email_enabled
+            biometric_enabled
+            private_mode
+            allow_screenshot
+            context_menu
+            sms_alert
+            two_factor_enabled
+            two_factor_channel
+            authenticator_configured
+            authenticator_verified_at
+            created_at
+            updated_at
+          }
+          kyc {
+            id
+            user_id
+            status
+            bvn
+            bvn_meta
+            nin
+            nin_meta
+            id_document
+            id_url
+            face_map
+            marital_status
+            income_range
+            work_industry
+            created_at
+            updated_at
+          }
+          device {
+            device_id
+            device_name
+            device_token
+            app_version
+            timezone
+            datetime
+          }
+          created_at
+          updated_at
+        }
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminSystemFunds(input: $adminSystemFundsInput2) {
+    ... on ResponseWithAdminSystemFunds {
+      message
+      data {
+        date
+        flexi_balance
+        savings_balance
+        roi_liability
+        capital_outflow
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminFundsBreakdown(input: $adminFundsBreakdownInput2) {
+    ... on ResponseWithAdminBreakdownGroups {
+      message
+      data {
+        mode
+        items {
+          key
+          label
+          amount
+        }
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminSavingsOverview(input: $adminSavingsOverviewInput2) {
+    ... on ResponseWithAdminSavingsOverview {
+      message
+      data {
+        currency
+        total_savings_balance
+        total_savings_balance_change_pct
+        total_fixed_deposit_balance
+        total_fixed_deposit_balance_change_pct
+        total_target_savings_balance
+        total_target_savings_balance_change_pct
+        total_locked_savings
+        total_locked_savings_change_pct
+        total_savings_plans_count
+        total_deposits
+        total_deposits_change_pct
+        total_withdrawals
+        total_withdrawals_change_pct
+        average_daily_savings
+        average_daily_savings_change_pct
+        upcoming_maturities_30d_amount
+        upcoming_maturities_30d_count
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminSavingsByType(input: $adminSavingsByTypeInput2) {
+    ... on ResponseWithAdminBreakdown {
+      message
+      data {
+        key
+        label
+        amount
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminSavingsBalanceSeries(input: $adminSavingsBalanceSeriesInput2) {
+    ... on ResponseWithAdminSavingsBalanceSeries {
+      message
+      data {
+        date
+        total_savings_balance
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminSavingsMaturityTimeline(input: $adminSavingsMaturityTimelineInput2) {
+    ... on ResponseWithAdminMaturityTimeline {
+      message
+      data {
+        date
+        amount
+        count
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminROIOverview(input: $adminRoiOverviewInput2) {
+    ... on ResponseWithAdminROIOverview {
+      message
+      data {
+        currency
+        total_roi_liability
+        total_roi_liability_today
+        roi_generated_today
+        roi_generated_today_change_pct
+        roi_withdrawn_today
+        roi_withdrawn_today_change_pct
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  adminROIByProduct(input: $adminRoiByProductInput2) {
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on ResponseWithAdminBreakdown {
+      message
+      data {
+        key
+        label
+        amount
+      }
+    }
+  }
+  adminROIFlowSeries(input: $adminRoiFlowSeriesInput2) {
+    ... on ResponseWithAdminROIFlowSeries {
+      message
+      data {
+        date
+        roi_generated
+        roi_withdrawn
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  signin(input: $signinInput2) {
+    ... on ResponseWithTwoFactorChallenge {
+      message
+      data {
+        challenge_id
+        channel
+        expires_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on ResponseWithUser {
+      message
+      data {
+        id
+        firstname
+        middlename
+        lastname
+        email
+        phone
+        phone_code
+        gender
+        country
+        username
+        language
+        tier
+        dob
+        passcode
+        pin_set
+        referral
+        avatar
+        internal
+        role
+        status
+        address {
+          id
+          user_id
+          user {
+            id
+            firstname
+            middlename
+            lastname
+            email
+            phone
+            phone_code
+            gender
+            country
+            username
+            language
+            tier
+            dob
+            passcode
+            pin_set
+            referral
+            avatar
+            internal
+            role
+            status
+            created_at
+            updated_at
+          }
+          state
+          city
+          house_number
+          address_meta
+          street
+          zip
+          verified
+          created_at
+          updated_at
+        }
+        security_setting {
+          id
+          user_id
+          appearance_mode
+          push_enabled
+          email_enabled
+          biometric_enabled
+          private_mode
+          allow_screenshot
+          context_menu
+          sms_alert
+          two_factor_enabled
+          two_factor_channel
+          authenticator_configured
+          authenticator_verified_at
+          created_at
+          updated_at
+        }
+        kyc {
+          id
+          user_id
+          status
+          bvn
+          bvn_meta
+          nin
+          nin_meta
+          id_document
+          id_url
+          face_map
+          marital_status
+          next_of_kin {
+            firstname
+            lastname
+            email
+            address
+            phone
+            phone_code
+            relationship
+          }
+          income_range
+          work_industry
+          created_at
+          updated_at
+        }
+        device {
+          device_id
+          device_name
+          device_token
+          app_version
+          timezone
+          datetime
+        }
+        created_at
+        updated_at
+      }
+    }
+  }
+  profile {
+    ... on ResponseWithUser {
+      message
+      data {
+        id
+        firstname
+        middlename
+        lastname
+        email
+        phone
+        phone_code
+        gender
+        country
+        username
+        language
+        tier
+        dob
+        passcode
+        pin_set
+        referral
+        avatar
+        internal
+        role
+        status
+        address {
+          id
+          user_id
+          user {
+            id
+            firstname
+            middlename
+            lastname
+            email
+            phone
+            phone_code
+            gender
+            country
+            username
+            language
+            tier
+            dob
+            passcode
+            pin_set
+            referral
+            avatar
+            internal
+            role
+            status
+            created_at
+            updated_at
+          }
+          state
+          city
+          house_number
+          address_meta
+          street
+          zip
+          verified
+          created_at
+          updated_at
+        }
+        security_setting {
+          id
+          user_id
+          appearance_mode
+          push_enabled
+          email_enabled
+          biometric_enabled
+          private_mode
+          allow_screenshot
+          context_menu
+          sms_alert
+          two_factor_enabled
+          two_factor_channel
+          authenticator_configured
+          authenticator_verified_at
+          created_at
+          updated_at
+        }
+        kyc {
+          id
+          user_id
+          status
+          bvn
+          bvn_meta
+          nin
+          nin_meta
+          id_document
+          id_url
+          face_map
+          marital_status
+          next_of_kin {
+            firstname
+            lastname
+            email
+            address
+            phone
+            phone_code
+            relationship
+          }
+          income_range
+          work_industry
+          created_at
+          updated_at
+        }
+        device {
+          device_id
+          device_name
+          device_token
+          app_version
+          timezone
+          datetime
+        }
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+      
+    }
+  }
+  cards(input: $cardsInput2) {
+    ... on ResponseWithCards {
+      message
+      data {
+        id
+        user_id
+        first_6digits
+        last_4digits
+        issuer
+        country
+        type
+        expiry
+        checksum
+        created_at
+        updated_at
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  card(input: $cardInput2) {
+    ... on ResponseWithCard {
+      message
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  faq(faq_id: $faqId) {
+    ... on ResponseWithFAQ {
+      message
+      data {
+        id
+        question
+        answer
+        category
+        sort_order
+        status
+        created_by
+        created_at
+        updated_at
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  faqs(input: $faqsInput2) {
+    ... on ResponseWithFAQs {
+      message
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  lien(input: $lienInput2) {
+    ... on ResponseWithLien {
+      message
+      data {
+        id
+        savings_id
+        product_id
+        author_id
+        amount
+        reason
+        active
+        ending_at
+        created_at
+        updated_at
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  liens(input: $liensInput2) {
+    ... on ResponseWithLiens {
+      message
+      data {
+        id
+        savings_id
+        product_id
+        author_id
+        amount
+        reason
+        active
+        ending_at
+        created_at
+        updated_at
+      }
+      pagination {
+        page
+        limit
+        pages
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  linkedAccounts(input: $linkedAccountsInput2) {
+    ... on ResponseWithLinkedAccounts {
+      message
+      data {
+        id
+        user_id
+        account_name
+        account_number
+        bank_name
+        bank_code
+        currency
+        personal
+        verified
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  linkedAccount(input: $linkedAccountInput2) {
+    ... on ResponseWithLinkedAccount {
+      message
+      data {
+        id
+        user_id
+        account_name
+        account_number
+        bank_name
+        bank_code
+        currency
+        personal
+        verified
+        created_at
+        updated_at
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  bellBanks {
+    ... on ResponseWithBellBanks {
+      message
+      data {
+        institution_id
+        institution_code
+        institution_name
+        bank_institution_code
+        sort_code
+        institution_type
+        category
+        flag
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  platformConfig {
+    ... on ResponseWithPlatformConfig {
+      message
+      data {
+        tiers
+        free_transfer
+        free_transfer_cycle
+        minimum_account_balance
+        maximum_account_balance
+        maximum_total_withdrawals_per_day
+        maximum_amount_per_withdrawal
+        maximum_net_capital_outflow
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  savingsPortfolio {
+    ... on ResponseWithSavingsPortfolios {
+      message
+      data {
+        currency
+        total_saved
+        total_interest
+        total_interest_accrued
+        total_withdrawn
+        total_target_amount
+        total_target_savings
+        total_fixed_savings
+        total_balance
+        active_savings_count
+        completed_savings_count
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  portfolio {
+    ... on ResponseWithPortfolios {
+      message
+      data {
+        currency
+        savings_balance
+        wallet_balance
+        total_balance
+        total_earnings
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  exist(input: $existInput2) {
+    ... on ResponseWithBase {
+      message
+      data {
+        exist
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  product(input: $productInput2) {
+    ... on ResponseWithProduct {
+      message
+      data {
+        id
+        author_id
+        name
+        template
+        description
+        code
+        headline
+        status
+        account_creation_type
+        account_number
+        currency
+        product_name
+        is_configurable
+        interest_rate
+        interest_calculation_method
+        interest_type
+        minimum_amount_per_contribution
+        minimum_initial_deposit
+        minimum_balance_required
+        maximum_single_deposit_per_day
+        enable_withdrawal
+        enable_break
+        enable_auto_save
+        auto_save_frequency
+        auto_renew
+        minimum_duration_days
+        maximum_duration_days
+        minimum_days_before_penalty_free_withdrawal
+        early_withdrawal_penalty
+        monthly_withdrawal_limit
+        withdrawal_cooldown_hours
+        penalty_model
+        interest_payment_frequency
+        penalty_free_at_maturity_only
+        withdrawal_modes
+        tenure_interest_rates
+        locked_interest_rate
+        flexible_interest_rate
+        interest_payment_timing
+        early_exit_interest_policy
+        break_waiting_period_hours
+        allow_partial_early_withdrawal
+        maturity_auto_settle_to_flex
+        lifecycle_policy_enabled
+        account_opening_fee
+        minimum_withdrawal_limit
+        withdrawal_fee
+        tax_rate
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  products {
+    ... on ResponseWithProducts {
+      message
+    }
+  }
+  rates(input: $ratesInput2) {
+    ... on ResponseWithRates {
+      message
+      data {
+        id
+        base
+        exchange
+        symbol
+        val
+        markup
+        quote
+        fee
+        fee_type
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  saving(input: $savingInput2) {
+    ... on ResponseWithSaving {
+      message
+      data {
+        id
+        user_id
+        product_id
+        template
+        label
+        image
+        interest_rate
+        savings_amount
+        target_amount
+        frequency
+        withdrawal_mode
+        source_of_funds
+        auto_save
+        auto_save_frequency
+        next_auto_save_at
+        auto_renew
+        duration
+        status
+        amount_saved
+        amount_withdrawn
+        balance
+        interest
+        interest_accrued
+        penalty_count
+        interest_forfeited
+        currency
+        account_number
+        settlement_policy_version
+        policy_snapshot
+        cycle_reference
+        is_renewal
+        renewed_from_savings_id
+        renewal_root_savings_id
+        renewal_sequence
+        upfront_interest_gross
+        upfront_interest_tax
+        upfront_interest_net
+        upfront_interest_paid_at
+        break_requested_at
+        break_settlement_at
+        matured_at
+        settled_at
+        started_at
+        ending_at
+        last_withdrawal_at
+        last_penalty_at
+        interested_computed_till
+        product {
+          id
+          author_id
+          name
+          template
+          description
+          code
+          headline
+          status
+          account_creation_type
+          account_number
+          currency
+          product_name
+          is_configurable
+          interest_rate
+          interest_calculation_method
+          interest_type
+          minimum_amount_per_contribution
+          minimum_initial_deposit
+          minimum_balance_required
+          maximum_single_deposit_per_day
+          enable_withdrawal
+          enable_break
+          enable_auto_save
+          auto_save_frequency
+          auto_renew
+          minimum_duration_days
+          maximum_duration_days
+          minimum_days_before_penalty_free_withdrawal
+          early_withdrawal_penalty
+          monthly_withdrawal_limit
+          withdrawal_cooldown_hours
+          penalty_model
+          interest_payment_frequency
+          penalty_free_at_maturity_only
+          withdrawal_modes
+          tenure_interest_rates
+          locked_interest_rate
+          flexible_interest_rate
+          interest_payment_timing
+          early_exit_interest_policy
+          break_waiting_period_hours
+          allow_partial_early_withdrawal
+          maturity_auto_settle_to_flex
+          lifecycle_policy_enabled
+          account_opening_fee
+          minimum_withdrawal_limit
+          withdrawal_fee
+          tax_rate
+          created_at
+          updated_at
+        }
+        created_at
+        updated_at
+      }
+      transaction {
+        id
+        user_id
+        savings_id
+        wallet_id
+        type
+        reference
+        currency
+        source_currency
+        gateway
+        method
+        status
+        completed_at
+        failed_at
+        cancelled_at
+        checksum
+        payment_link
+        initial_config
+        final_config
+        metadata
+        savings_amount
+        source_amount
+        amount
+        fees
+        pre_balance
+        post_balance
+        remark
+        direction
+        settlement_reason
+        settlement_due_at
+        settlement_policy_version
+        parent_transaction_id
+        cycle_reference
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  savings {
+    ... on ResponseWithSavings {
+      message
+    }
+  }
+  balance(input: $balanceInput2) {
+    ... on ResponseWithBalance {
+      message
+      data {
+        amount_saved
+        interest
+        interest_accrued
+        amount_withdrawn
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  securitySetting {
+    ... on ResponseWithSecuritySetting {
+      message
+      data {
+        id
+        user_id
+        appearance_mode
+        push_enabled
+        email_enabled
+        biometric_enabled
+        private_mode
+        allow_screenshot
+        context_menu
+        sms_alert
+        two_factor_enabled
+        two_factor_channel
+        authenticator_configured
+        authenticator_verified_at
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  loginSessions {
+    ... on ResponseWithLoginSessions {
+      message
+      data {
+        id
+        user_id
+        device_id
+        device_name
+        app_version
+        timezone
+        device_token
+        last_login_at
+        last_seen_at
+        revoked_at
+        current
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  targetPlanTemplate(template_id: $templateId) {
+    ... on ResponseWithTargetPlanTemplate {
+      message
+      data {
+        id
+        user_id
+        title
+        image
+        description
+        target_amount
+        duration
+        frequency
+        currency
+        auto_save
+        auto_save_frequency
+        status
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  targetPlanTemplates(input: $targetPlanTemplatesInput2) {
+    ... on ResponseWithTargetPlanTemplates {
+      message
+      data {
+        id
+        user_id
+        title
+        image
+        description
+        target_amount
+        duration
+        frequency
+        currency
+        auto_save
+        auto_save_frequency
+        status
+        created_at
+        updated_at
+      }
+      pagination {
+        page
+        limit
+        pages
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  transaction(input: $transactionInput2) {
+    ... on ResponseWithTransaction {
+      message
+      data {
+        id
+        user_id
+        savings_id
+        wallet_id
+        type
+        reference
+        currency
+        source_currency
+        gateway
+        method
+        status
+        completed_at
+        failed_at
+        cancelled_at
+        checksum
+        payment_link
+        initial_config
+        final_config
+        metadata
+        savings_amount
+        source_amount
+        amount
+        fees
+        pre_balance
+        post_balance
+        remark
+        direction
+        settlement_reason
+        settlement_due_at
+        settlement_policy_version
+        parent_transaction_id
+        cycle_reference
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  transactions(input: $transactionsInput2) {
+    ... on ResponseWithTransactions {
+      message
+      data {
+        id
+        user_id
+        savings_id
+        wallet_id
+        type
+        reference
+        currency
+        source_currency
+        gateway
+        method
+        status
+        completed_at
+        failed_at
+        cancelled_at
+        checksum
+        payment_link
+        initial_config
+        final_config
+        metadata
+        history {
+          act
+          by
+          at
+        }
+        invoice {
+          key
+          name
+          number
+          amount
+          fees
+          bank
+          metadata
+        }
+        savings_amount
+        source_amount
+        rate {
+          id
+          base
+          exchange
+          symbol
+          val
+          markup
+          quote
+          fee
+          fee_type
+          created_at
+          updated_at
+        }
+        amount
+        fees
+        pre_balance
+        post_balance
+        remark
+        direction
+        settlement_reason
+        settlement_due_at
+        settlement_policy_version
+        parent_transaction_id
+        cycle_reference
+        created_at
+        updated_at
+        user {
+          id
+          firstname
+          middlename
+          lastname
+          email
+          phone
+          phone_code
+          gender
+          country
+          username
+          language
+          tier
+          dob
+          passcode
+          pin_set
+          referral
+          avatar
+          internal
+          role
+          status
+          address {
+            id
+            user_id
+            state
+            city
+            house_number
+            address_meta
+            street
+            zip
+            verified
+            created_at
+            updated_at
+          }
+          security_setting {
+            id
+            user_id
+            appearance_mode
+            push_enabled
+            email_enabled
+            biometric_enabled
+            private_mode
+            allow_screenshot
+            context_menu
+            sms_alert
+            two_factor_enabled
+            two_factor_channel
+            authenticator_configured
+            authenticator_verified_at
+            created_at
+            updated_at
+          }
+          kyc {
+            id
+            user_id
+            status
+            bvn
+            bvn_meta
+            nin
+            nin_meta
+            id_document
+            id_url
+            face_map
+            marital_status
+            next_of_kin {
+              firstname
+              lastname
+              email
+              address
+              phone
+              phone_code
+              relationship
+            }
+            income_range
+            work_industry
+            created_at
+            updated_at
+          }
+          device {
+            device_id
+            device_name
+            device_token
+            app_version
+            timezone
+            datetime
+          }
+          created_at
+          updated_at
+        }
+      }
+      pagination {
+        page
+        limit
+        pages
+      }
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  statement(input: $statementInput2) {
+    ... on Error {
+      message
+      code
+      status
+      
+    }
+    ... on Response {
+      message
+      url
+      
+    }
+  }
+  emailVerification(input: $emailVerificationInput2) {
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on Response {
+      message
+      url
+    }
+  }
+  emailConfirmation(input: $emailConfirmationInput2) {
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on Response {
+      message
+      url
+    }
+  }
+  phoneVerification(input: $phoneVerificationInput2) {
+    ... on ResponseWithAnything {
+      message
+      data
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  phoneConfirmation(input: $phoneConfirmationInput2) {
+    ... on Error {
+      message
+      code
+      status
+    }
+    ... on ResponseWithUser {
+      message
+      data {
+        
+      }
+      
+    }
+  }
+  wallets(input: $walletsInput2) {
+    ... on ResponseWithWallets {
+      message
+      data {
+        id
+        user_id
+        type
+        name
+        balance
+        earnings
+        currency
+        created_at
+        updated_at
+      }
+      
+    }
+    ... on Error {
+      message
+      code
+      status
+    }
+  }
+  _entities(representations: $representations) {
+    ... on Address {
+      id
+      user_id
+      user {
+        id
+        firstname
+        middlename
+        lastname
+        email
+        phone
+        phone_code
+        gender
+        country
+        username
+        language
+        tier
+        dob
+        passcode
+        pin_set
+        referral
+        avatar
+        internal
+        role
+        status
+        created_at
+        updated_at
+      }
+      state
+      city
+      house_number
+      address_meta
+      street
+      zip
+      verified
+      created_at
+      updated_at
+    }
+    ... on Card {
+      id
+      user_id
+      first_6digits
+      last_4digits
+      issuer
+      country
+      type
+      expiry
+      checksum
+      created_at
+      updated_at
+    }
+    ... on KYC {
+      id
+      user_id
+      status
+      bvn
+      bvn_meta
+      nin
+      nin_meta
+      id_document
+      id_url
+      face_map
+      marital_status
+      next_of_kin {
+        firstname
+        lastname
+        email
+        address
+        phone
+        phone_code
+        relationship
+      }
+      income_range
+      work_industry
+      created_at
+      updated_at
+    }
+    ... on LinkedAccount {
+      id
+      user_id
+      account_name
+      account_number
+      bank_name
+      bank_code
+      currency
+      personal
+      verified
+      created_at
+      updated_at
+    }
+    ... on Rate {
+      id
+      base
+      exchange
+      symbol
+      val
+      markup
+      quote
+      fee
+      fee_type
+      created_at
+      updated_at
+    }
+    ... on SecuritySetting {
+      id
+      user_id
+      appearance_mode
+      push_enabled
+      email_enabled
+      biometric_enabled
+      private_mode
+      allow_screenshot
+      context_menu
+      sms_alert
+      two_factor_enabled
+      two_factor_channel
+      authenticator_configured
+      authenticator_verified_at
+      created_at
+      updated_at
+    }
+    ... on Transaction {
+      id
+      user_id
+      savings_id
+      wallet_id
+      type
+      reference
+      currency
+      source_currency
+      gateway
+      method
+      status
+      completed_at
+      failed_at
+      cancelled_at
+      checksum
+      payment_link
+      initial_config
+      final_config
+      metadata
+      history {
+        act
+        by
+        at
+      }
+      invoice {
+        key
+        name
+        number
+        amount
+        fees
+        bank
+        metadata
+      }
+      savings_amount
+      source_amount
+      rate {
+        id
+        base
+        exchange
+        symbol
+        val
+        markup
+        quote
+        fee
+        fee_type
+        created_at
+        updated_at
+      }
+      amount
+      fees
+      pre_balance
+      post_balance
+      remark
+      direction
+      settlement_reason
+      settlement_due_at
+      settlement_policy_version
+      parent_transaction_id
+      cycle_reference
+      created_at
+      updated_at
+    }
+    ... on User {
+      id
+      firstname
+      middlename
+      lastname
+      email
+      phone
+      phone_code
+      gender
+      country
+      username
+      language
+      tier
+      dob
+      passcode
+      pin_set
+      referral
+      avatar
+      internal
+      role
+      status
+      address {
+        id
+        user_id
+        state
+        city
+        house_number
+        address_meta
+        street
+        zip
+        verified
+        created_at
+        updated_at
+      }
+      security_setting {
+        id
+        user_id
+        appearance_mode
+        push_enabled
+        email_enabled
+        biometric_enabled
+        private_mode
+        allow_screenshot
+        context_menu
+        sms_alert
+        two_factor_enabled
+        two_factor_channel
+        authenticator_configured
+        authenticator_verified_at
+        created_at
+        updated_at
+      }
+      kyc {
+        id
+        user_id
+        status
+        bvn
+        bvn_meta
+        nin
+        nin_meta
+        id_document
+        id_url
+        face_map
+        marital_status
+        income_range
+        work_industry
+        created_at
+        updated_at
+      }
+      device {
+        device_id
+        device_name
+        device_token
+        app_version
+        timezone
+        datetime
+      }
+      created_at
+      updated_at
+    }
+    ... on Wallet {
+      id
+      user_id
+      type
+      name
+      balance
+      earnings
+      currency
+      address {
+        address
+        network
+        router
+      }
+      created_at
+      updated_at
+    }
+  }
+  _service {
+    sdl
+  }
+}
+
+
+{
+  "input": {
+    "user_id": null
+  },
+  "adminKycInput2": {
+    "user_id": null
+  },
+  "adminFundsBreakdownInput2": {
+    "currency": null,
+    "mode": null
+  },
+  "signinInput2": {
+    "app_version": null,
+    "code": null,
+    "datetime": null,
+    "device_id": null,
+    "device_name": null,
+    "device_token": null,
+    "email": null,
+    "timezone": null
+  },
+  "cardsInput2": {
+    "card_id": null,
+    "user_id": null
+  },
+  "cardInput2": {
+    "card_id": null,
+    "user_id": null
+  },
+  "faqId": null,
+  "lienInput2": {
+    "active": null,
+    "author_id": null,
+    "lien_id": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null
+  },
+  "linkedAccountInput2": {
+    "account_number": null,
+    "bank_code": null,
+    "currency": null,
+    "linked_account_id": null,
+    "user_id": null
+  },
+  "existInput2": {
+    "key": null,
+    "value": null
+  },
+  "productInput2": {
+    "author_id": null,
+    "code": null,
+    "currency": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "search": null,
+    "sort": null,
+    "status": null,
+    "template": null
+  },
+  "ratesInput2": {
+    "base": null,
+    "exchange": null,
+    "symbol": null
+  },
+  "savingInput2": {
+    "account_number": null,
+    "auto_renew": null,
+    "auto_save": null,
+    "auto_save_frequency": null,
+    "frequency": null,
+    "image": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null,
+    "sort_by": null,
+    "source_of_funds": null,
+    "status": null,
+    "statuses": null,
+    "template": null,
+    "user_id": null,
+    "withdrawal_mode": null
+  },
+  "templateId": null,
+  "transactionInput2": {
+    "capital_transaction": null,
+    "currency": null,
+    "end_date": null,
+    "limit": null,
+    "method": null,
+    "page": null,
+    "wallet_id": null,
+    "user_id": null,
+    "types": null,
+    "type": null,
+    "transaction_id": null,
+    "statuses": null,
+    "reference": null,
+    "product_id": null,
+    "paginate": null,
+    "roi_withdrawal": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null,
+    "start_date": null,
+    "status": null
+  },
+  "transactionsInput2": {
+    "capital_transaction": null,
+    "currency": null,
+    "end_date": null,
+    "limit": null,
+    "method": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "reference": null,
+    "roi_withdrawal": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null,
+    "start_date": null,
+    "status": null,
+    "statuses": null,
+    "transaction_id": null,
+    "type": null,
+    "types": null,
+    "user_id": null,
+    "wallet_id": null
+  },
+  "statementInput2": {
+    "currency": null,
+    "delivery_mode": null,
+    "email": null,
+    "end_date": null,
+    "format": null,
+    "sort": null,
+    "start_date": null
+  },
+  "emailVerificationInput2": {
+    "email": null
+  },
+  "emailConfirmationInput2": {
+    "code": null,
+    "email": null
+  },
+  "phoneVerificationInput2": {
+    "country": null,
+    "phone": null
+  },
+  "phoneConfirmationInput2": {
+    "code": null,
+    "for": null,
+    "phone": null
+  },
+  "walletsInput2": {
+    "type": null
+  },
+  "representations": null,
+  "adminKycOverviewInput2": {
+    "include_internal": null
+  },
+  "adminKyCsInput2": {
+    "email": null,
+    "include_internal": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "pending_review_only": null,
+    "search": null,
+    "sort": null,
+    "status": null,
+    "user_id": null
+  },
+  "adminOverviewMetricsInput2": {
+    "currency": null
+  },
+  "adminRoiByProductInput2": {
+    "currency": null,
+    "end_date": null,
+    "start_date": null
+  },
+  "adminRoiFlowSeriesInput2": {
+    "currency": null,
+    "end_date": null,
+    "granularity": null,
+    "start_date": null
+  },
+  "adminRoiOverviewInput2": {
+    "currency": null
+  },
+  "adminSavingsBalanceSeriesInput2": {
+    "currency": null,
+    "end_date": null,
+    "granularity": null,
+    "start_date": null
+  },
+  "adminSavingsByTypeInput2": {
+    "currency": null,
+    "end_date": null,
+    "start_date": null
+  },
+  "adminSavingsMaturityTimelineInput2": {
+    "currency": null,
+    "end_date": null,
+    "granularity": null,
+    "start_date": null
+  },
+  "adminSavingsOverviewInput2": {
+    "currency": null,
+    "end_date": null,
+    "start_date": null
+  },
+  "adminSystemFundsInput2": {
+    "currency": null,
+    "end_date": null,
+    "granularity": null,
+    "start_date": null
+  },
+  "adminTransactionOverviewInput2": {
+    "currency": null
+  },
+  "adminUsersInput2": {
+    "include_internal": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "search": null,
+    "sort": null,
+    "status": null,
+    "tier": null
+  },
+  "adminUsersOverviewInput2": {
+    "include_internal": null
+  },
+  "adminWalletBalanceSeriesInput2": {
+    "currency": null,
+    "end_date": null,
+    "granularity": null,
+    "start_date": null
+  },
+  "adminWalletOverviewInput2": {
+    "currency": null,
+    "end_date": null,
+    "start_date": null
+  },
+  "balanceInput2": {
+    "account_number": null,
+    "auto_renew": null,
+    "auto_save": null,
+    "auto_save_frequency": null,
+    "frequency": null,
+    "image": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null,
+    "sort_by": null,
+    "source_of_funds": null,
+    "status": null,
+    "statuses": null,
+    "template": null,
+    "user_id": null,
+    "withdrawal_mode": null
+  },
+  "faqsInput2": {
+    "category": null,
+    "faq_id": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "search": null,
+    "status": null
+  },
+  "liensInput2": {
+    "active": null,
+    "author_id": null,
+    "lien_id": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "product_id": null,
+    "savings_id": null,
+    "search": null,
+    "sort": null
+  },
+  "linkedAccountsInput2": {
+    "account_number": null,
+    "bank_code": null,
+    "currency": null,
+    "linked_account_id": null,
+    "user_id": null
+  },
+  "targetPlanTemplatesInput2": {
+    "currency": null,
+    "limit": null,
+    "page": null,
+    "paginate": null,
+    "search": null,
+    "status": null,
+    "template_id": null
+  }
+}

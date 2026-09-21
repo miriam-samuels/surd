@@ -1,11 +1,3 @@
-/**
- * Dashboard fallback.
- *
- * The shell (sidebar and topbar) is already on screen from the layout, so this
- * only stands in for the workspace. It mirrors the real page's block structure
- * — banner, stat row, panels — so the transition doesn't shift the layout when
- * content arrives.
- */
 export default function DashboardLoading() {
   return (
     <div className="flex animate-pulse flex-col gap-5" aria-busy>

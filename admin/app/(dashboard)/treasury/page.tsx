@@ -1,95 +1,209 @@
 "use client";
 
+import { useState } from "react";
 import {
-  AnalyticsUpIcon,
-  Building03Icon,
+  ArrowDown02Icon,
+  ArrowUp02Icon,
+  ArrowUpDownIcon,
+  BankIcon,
+  CheckmarkCircle02Icon,
   PercentIcon,
-  Task01Icon,
+  PlusSignIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  useAdminTreasuryOverview,
+  useAdminTreasurySeries,
+  useTransactions,
+} from "@/api";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { EmptyState } from "@/components/ui/empty-state";
+import { CapitalDialog } from "@/components/treasury/capital-dialog";
+import { Dropdown } from "@/components/ui/dropdown";
+import { TableEmptyState } from "@/components/ui/empty-state";
+import {
+  AMOUNT_OPTIONS,
+  EMPTY_RANGE,
+  amountBounds,
+  dateFilterGroup,
+  dateBounds,
+} from "@/components/ui/filter-presets";
+import {
+  TableFilter,
+  TableSort,
+  type FilterGroup,
+  type FilterOption,
+} from "@/components/ui/table-controls";
+import { Flag } from "@/components/ui/flag";
+import { CURRENCIES as PLATFORM_CURRENCIES } from "@/constants/currency";
 import { PageHeader } from "@/components/ui/page-header";
+import { SearchInput } from "@/components/ui/search-input";
+import { Spinner } from "@/components/ui/spinner";
+import { Can } from "@/components/auth/can";
+import { ChartLegend, SeriesChart, SERIES_COLORS } from "@/components/dashboard/charts";
 import { CurrencyChip } from "@/components/dashboard/editor-cell";
 import { OwnerCell } from "@/components/dashboard/owner-cell";
 import { Panel } from "@/components/dashboard/panel";
-import { StatCard } from "@/components/dashboard/stat-card";
+import { healthTone, StatCard } from "@/components/dashboard/stat-card";
 import { DataTable, type Column } from "@/components/ui/table";
-import { useToast } from "@/components/ui/toast";
+import { useAuthorizedByFilter } from "@/hooks/use-admin-filter";
+import { useDateRange } from "@/hooks/use-date-range";
+import { useTablePage } from "@/hooks/use-pagination";
+import { useDebounced } from "@/hooks/use-debounced";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import {
-  CAPITAL_BREAKDOWN,
-  PENDING_WITHDRAWAL_QUEUE,
-  TREASURY_SUMMARY,
-  type CapitalLine,
-  type PendingWithdrawalRecord,
-} from "@/content/finance";
-import { cn } from "@/lib/cn";
+  formatAbsoluteChange,
+  formatCompactMoney,
+  formatEnum,
+  formatMoney,
+  formatMultiple,
+  formatName,
+  formatPercent,
+  formatTimestamp,
+} from "@/lib/format";
+import {
+  Currency,
+  SortDirection,
+  TransactionType,
+} from "@/types/enum";
+import { Permission } from "@/types/permission";
+import type { Transaction } from "@/types/transaction";
+import { useCurrency } from "@/contexts/currency";
 
-/**
- * Treasury: how much capital is safe to deploy, and the withdrawals waiting on
- * an admin decision because they crossed the large-transaction threshold.
+/*
+ * Every control maps to a field on the shared transaction filter, exactly as
+ * the Treasury doc lays out. `capital_transaction: true` stays set alongside
+ * all of them, or the query widens to the whole ledger.
+ *
+ * The amount bands are naira figures from the design; they are sent as
+ * `min_amount` / `max_amount` in whatever currency is in force, which is the
+ * only shape the API offers.
  */
-export default function TreasuryPage() {
-  const toast = useToast();
-  const approve = useDisclosure<PendingWithdrawalRecord>();
-  const reject = useDisclosure<PendingWithdrawalRecord>();
+const STATUS_OPTIONS: FilterOption[] = [
+  { value: "", label: "All transactions" },
+  { value: TransactionType.CapitalOutflow, label: "Outflow" },
+  { value: TransactionType.CapitalRefund, label: "Refund" },
+];
 
-  const columns: Column<PendingWithdrawalRecord>[] = [
-    { id: "reference", header: "Reference", cell: (row) => row.reference },
-    {
-      id: "owner",
-      header: "Requested by",
-      cell: (row) => <OwnerCell name={row.owner} email={row.ownerEmail} />,
-      width: "min-w-56",
-    },
+/* The flag is what an admin actually reads here — the code beside it is the
+   caption, not the identifier. */
+const CURRENCY_OPTIONS: FilterOption[] = PLATFORM_CURRENCIES.map((entry) => ({
+  value: entry.value,
+  label: entry.label,
+  adornment: <Flag code={entry.country} size="sm" />,
+}));
+
+/* FIXME(api): an enum server-side; the note only names EXTERNAL_INVESTMENT. */
+
+export default function TreasuryPage() {
+  const { currency } = useCurrency();
+  const [filters, setFilters] = useState<Record<string, string | undefined>>({});
+  const [customRange, setCustomRange] = useState(EMPTY_RANGE);
+  const [sort, setSort] = useState<SortDirection>(SortDirection.Desc);
+  const [query, setQuery] = useState("");
+  const { page, setPage, pageSize, setPageSize } = useTablePage();
+
+  const { key, setKey, range, options } = useDateRange();
+  const search = useDebounced(query);
+
+  const outflow = useDisclosure<void>();
+  const refund = useDisclosure<void>();
+
+  const { data: overview, isLoading: loadingCards } = useAdminTreasuryOverview({
+    currency,
+  });
+
+  const { data: series, isLoading: loadingChart } = useAdminTreasurySeries({
+    ...range,
+    currency,
+  });
+
+  const authorizedBy = useAuthorizedByFilter();
+
+  const filterGroups: FilterGroup[] = [
+    { id: "type", label: "Status", options: STATUS_OPTIONS },
+    { id: "currency", label: "Currency", options: CURRENCY_OPTIONS },
+    { id: "amount", label: "Amount", options: AMOUNT_OPTIONS },
+    authorizedBy,
+    dateFilterGroup({
+      selected: filters.date,
+      range: customRange,
+      onRangeChange: setCustomRange,
+    }),
+  ];
+
+  const { data: rows, isLoading: loadingRows } = useTransactions({
+    /* Must stay set alongside the other filters, or this widens to the whole
+     * ledger rather than capital movements. */
+    capital_transaction: true,
+
+    /* The Currency filter overrides the platform toggle when it is set — an
+       admin who asked for USD movements meant it. */
+    currency: (filters.currency as Currency) ?? currency,
+    search: search || undefined,
+    ...(filters.type ? { type: filters.type } : {}),
+    ...(filters.author ? { user_id: filters.author } : {}),
+    ...amountBounds(filters.amount),
+    ...dateBounds(filters.date, customRange),
+    sort,
+    page,
+    limit: pageSize,
+    paginate: true,
+  });
+
+  /* One row per currency, nothing converted — match on `currency` rather than
+   * trusting the position. */
+  const cards =
+    overview?.data?.find((row) => row.currency === currency) ?? overview?.data?.[0];
+
+  const columns: Column<Transaction>[] = [
     {
       id: "currency",
       header: "Currency",
-      cell: (row) => <CurrencyChip currency={row.currency} />,
+      cell: (row) => <CurrencyChip currency={row.currency as never} />,
     },
     {
       id: "amount",
       header: "Amount",
       cell: (row) => (
-        <span className="font-semibold tabular-nums">{row.amount}</span>
+        <span className="font-semibold tabular-nums">
+          {formatMoney(row.amount, row.currency)}
+        </span>
       ),
       align: "right",
     },
-    { id: "source", header: "Source", cell: (row) => row.source },
     {
-      id: "reason",
-      header: "Held because",
-      cell: (row) => <span className="text-grey-500">{row.reason}</span>,
+      id: "status",
+      header: "Status",
+      /* The one place in the ledger where `type` is the right field: both
+         capital types fall into `category: OTHER`, because the six-bucket
+         taxonomy describes customer money movement. Rendering `category` here
+         would label every row "Other". */
+      cell: (row) => (
+        <Badge
+          tone={row.type === TransactionType.CapitalOutflow ? "danger" : "success"}
+          variant="outline"
+          size="sm"
+        >
+          {row.type === TransactionType.CapitalOutflow ? "Outflow" : "Refund"}
+        </Badge>
+      ),
+    },
+    {
+      id: "author",
+      header: "Authorized by",
+      /* Capital rows store the authorizing admin, not a customer. */
+      cell: (row) =>
+        row.user ? (
+          <OwnerCell name={formatName(row.user)} email={row.user.email} />
+        ) : (
+          <span className="text-grey-400">—</span>
+        ),
       width: "min-w-56",
     },
-    { id: "requested", header: "Requested", cell: (row) => row.requested },
     {
-      id: "actions",
-      header: "Actions",
-      cell: (row) => (
-        <span className="flex items-center gap-2">
-          <Button
-            tone="primary"
-            variant="soft"
-            size="md"
-            shape="pill"
-            onClick={() => approve.open(row)}
-          >
-            Approve
-          </Button>
-          <Button
-            tone="danger"
-            variant="soft"
-            size="md"
-            shape="pill"
-            onClick={() => reject.open(row)}
-          >
-            Reject
-          </Button>
-        </span>
-      ),
-      width: "min-w-52",
+      id: "created",
+      header: "Date & Time",
+      cell: (row) => formatTimestamp(row.created_at),
     },
   ];
 
@@ -97,137 +211,225 @@ export default function TreasuryPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Treasury"
-        description="Deployable capital and the withdrawals awaiting approval"
+        description="Deployable capital, what is deployed out, and every movement"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Can do={Permission.TreasuryMove}>
+              <Button
+                variant="soft"
+                size="md"
+                shape="pill"
+                leadingIcon={PlusSignIcon}
+                onClick={() => outflow.open()}
+              >
+                Add Capital Outflow
+              </Button>
+              <Button
+                tone="primary"
+                size="md"
+                shape="pill"
+                leadingIcon={PlusSignIcon}
+                onClick={() => refund.open()}
+              >
+                Add Refund
+              </Button>
+            </Can>
+          </div>
+        }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          label="Safe deployable capital"
-          value={TREASURY_SUMMARY.safeDeployable}
-          icon={Building03Icon}
-          hint="Customer funds minus liabilities and buffer"
+          label="Safe Deployable Capital"
+          value={
+            loadingCards
+              ? "…"
+              : formatCompactMoney(cards?.safe_deployable_capital, currency)
+          }
+          icon={CheckmarkCircle02Icon}
+          hint="Total funds less ROI owed, pending withdrawals, locked principal and the operating buffer"
         />
         <StatCard
-          label="Currently deployed"
-          value={TREASURY_SUMMARY.deployed}
-          icon={AnalyticsUpIcon}
-          hint="Capital already working"
+          label="Total Capital Outflow"
+          value={
+            loadingCards ? "…" : formatCompactMoney(cards?.total_capital_outflow, currency)
+          }
+          icon={ArrowUp02Icon}
+          hint="All-time — not scoped by any date filter"
         />
         <StatCard
-          label="Liquidity ratio"
-          value={TREASURY_SUMMARY.liquidityRatio}
+          label="Total Capital Refund"
+          value={
+            loadingCards ? "…" : formatCompactMoney(cards?.total_capital_refund, currency)
+          }
+          icon={ArrowDown02Icon}
+          hint="All-time capital returned"
+        />
+        <StatCard
+          label="Net Capital Position"
+          value={
+            loadingCards ? "…" : formatCompactMoney(cards?.net_capital_position, currency)
+          }
+          icon={BankIcon}
+          /* Absolute, from the start-of-day Lagos snapshot. */
+          delta={formatAbsoluteChange(cards?.net_capital_position_change_today, currency)}
+          hint="Outflow minus refund: what is currently deployed out"
+        />
+        <StatCard
+          label="Liquidity Ratio"
+          /* Null when there are nothing to cover — dividing by zero is not
+             "infinitely healthy", so it is a dash rather than a 0. */
+          value={
+            loadingCards
+              ? "…"
+              : cards?.liquidity_ratio == null
+                ? "—"
+                : formatMultiple(cards.liquidity_ratio)
+          }
           icon={PercentIcon}
-          note="Healthy"
+          note={formatEnum(cards?.liquidity_status)}
+          noteTone={healthTone(cards?.liquidity_status)}
+          hint="Safe deployable capital against obligations. HEALTHY at 1.0× or above."
         />
         <StatCard
-          label="Pending approvals"
-          value={TREASURY_SUMMARY.pendingApprovals}
-          icon={Task01Icon}
-          hint="Withdrawals waiting on a decision"
+          label="Treasury Exposure"
+          value={
+            loadingCards
+              ? "…"
+              : cards?.treasury_exposure_pct == null
+                ? "—"
+                : formatPercent(cards.treasury_exposure_pct)
+          }
+          icon={PercentIcon}
+          note={formatEnum(cards?.treasury_exposure_status)}
+          noteTone={healthTone(cards?.treasury_exposure_status)}
+          hint="Net position as a share of total system funds"
         />
       </div>
 
       <Panel
-        title="Safe Deployable Capital"
-        icon={Building03Icon}
-        hint="How the deployable figure is derived"
+        title="Liquidity Ratio Over Time"
+        icon={PercentIcon}
+        hint="Both series are shares of total system funds, so they share one axis"
+        actions={
+          <Dropdown
+            options={options}
+            value={key}
+            onChange={(next) => setKey(next as typeof key)}
+                      className="w-34 rounded-lg border-grey-50"
+
+          />
+        }
       >
-        <ol className="flex flex-col">
-          {CAPITAL_BREAKDOWN.map((line) => (
-            <CapitalRow key={line.id} line={line} />
-          ))}
-        </ol>
+        {loadingChart ? (
+          <div className="grid h-72 place-items-center">
+            <Spinner size={28} className="text-primary" />
+          </div>
+        ) : (
+          <>
+            <SeriesChart
+              data={series?.data ?? []}
+              unit="percent"
+              series={[
+                {
+                  key: "safe_deployable_capital_pct",
+                  name: "Safe deployable",
+                  color: SERIES_COLORS.roi,
+                },
+                { key: "obligations_pct", name: "Obligations", color: "#e5484d" },
+              ]}
+            />
+            <ChartLegend
+              items={[
+                { label: "Safe deployable", color: SERIES_COLORS.roi },
+                { label: "Obligations", color: "#e5484d" },
+              ]}
+            />
+          </>
+        )}
       </Panel>
 
       <Panel
-        title="Pending Withdrawals"
-        icon={Task01Icon}
-        hint="Above the large-transaction threshold, so they need sign-off"
+        title="Capital Transactions"
+        icon={ArrowUpDownIcon}
         actions={
-          <span className="text-md font-bold text-primary">
-            {PENDING_WITHDRAWAL_QUEUE.length}
-          </span>
+          <>
+            <SearchInput
+              value={query}
+              onChange={(next) => {
+                setQuery(next);
+                setPage(1);
+              }}
+              className="w-full sm:w-64"
+            />
+            <TableFilter
+              groups={filterGroups}
+              value={filters}
+              onChange={(next) => {
+                setFilters(next);
+                setPage(1);
+              }}
+            />
+            <TableSort
+              value={sort}
+              onChange={(next) => {
+                setSort(next);
+                setPage(1);
+              }}
+            />
+          </>
         }
         bleed
       >
         <div className="px-4 pb-5 sm:px-5">
           <DataTable
-            data={PENDING_WITHDRAWAL_QUEUE}
+            data={rows?.data ?? []}
             columns={columns}
             getRowId={(row) => row.id}
-            pagination={false}
-            minWidth="min-w-6xl"
+            isLoading={loadingRows}
+            minWidth="min-w-4xl"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              totalItems: rows?.pagination?.total ?? 0,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+            }}
             emptyState={
-              <EmptyState
-                icon={Task01Icon}
-                title="Nothing awaiting approval"
-                description="Withdrawals above the large-transaction threshold will appear here."
+              <TableEmptyState
+                query={search}
+                onClearSearch={() => {
+                  setQuery("");
+                  setPage(1);
+                }}
+                title="No Capital Transactions Record Yet"
+                description="No record for capital inflow or outflow has been added yet. When they are added, your treasury balances would be updated."
+                action={
+                  <Can do={Permission.TreasuryMove}>
+                    <Button
+                      tone="primary"
+                      size="xl"
+                      shape="pill"
+                      leadingIcon={PlusSignIcon}
+                      onClick={() => outflow.open()}
+                    >
+                      Add a Capital Record
+                    </Button>
+                  </Can>
+                }
               />
             }
           />
         </div>
       </Panel>
 
-      <Dialog
-        control={approve}
-        tone="success"
-        title="Approve this withdrawal?"
-        description={`${approve.data?.amount ?? ""} will be released to ${approve.data?.owner ?? "the customer"}.`}
-        confirmLabel="Yes, approve"
-        onConfirm={() => {
-          approve.close();
-          toast.show({ tone: "success", message: "Withdrawal approved." });
-        }}
-      />
-
-      <Dialog
-        control={reject}
-        tone="danger"
-        title="Reject this withdrawal?"
-        description={`${reject.data?.owner ?? "The customer"} will be notified and the funds stay in their wallet.`}
-        confirmLabel="Yes, reject"
-        onConfirm={() => {
-          reject.close();
-          toast.show({ tone: "warning", message: "Withdrawal rejected." });
-        }}
-      />
+      {outflow.isOpen ? (
+        <CapitalDialog control={outflow} kind="outflow" currency={currency} />
+      ) : null}
+      {refund.isOpen ? (
+        <CapitalDialog control={refund} kind="refund" currency={currency} />
+      ) : null}
     </div>
-  );
-}
-
-/** One line of the capital calculation, with its sign made explicit. */
-function CapitalRow({ line }: { line: CapitalLine }) {
-  const isTotal = line.effect === "total";
-
-  return (
-    <li
-      className={cn(
-        "flex flex-col gap-1 border-b border-grey-50 py-4 last:border-b-0",
-        "sm:flex-row sm:items-center sm:justify-between sm:gap-6",
-        isTotal && "border-t-2 border-t-grey-100",
-      )}
-    >
-      <div className="min-w-0">
-        <p
-          className={cn(
-            "font-semibold",
-            isTotal ? "text-md text-grey-900" : "text-sm text-grey-900",
-          )}
-        >
-          {line.label}
-        </p>
-        <p className="text-xs text-grey-400">{line.note}</p>
-      </div>
-
-      <p
-        className={cn(
-          "shrink-0 font-extrabold tabular-nums",
-          isTotal ? "text-heading-xs text-primary" : "text-md text-grey-900",
-        )}
-      >
-        {line.effect === "subtract" ? "−" : ""}
-        {line.value}
-      </p>
-    </li>
   );
 }

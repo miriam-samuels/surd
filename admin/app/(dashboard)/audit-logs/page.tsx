@@ -3,130 +3,152 @@
 import { useMemo, useState } from "react";
 import {
   ComputerIcon,
-  LaptopIcon,
   Settings02Icon,
+  SmartPhone01Icon,
   Task01Icon,
   UserGroupIcon,
   Wallet01Icon,
 } from "@hugeicons/core-free-icons";
+import { useAdminAccounts, useAdminAuditLogs } from "@/api";
 import { Avatar } from "@/components/ui/avatar";
-import { AvatarLabel } from "@/components/ui/avatar-label";
+import { Badge } from "@/components/ui/badge";
 import { FilterChip, MultiDropdown } from "@/components/ui/dropdown";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchInput } from "@/components/ui/search-input";
+import { PersonCell } from "@/components/dashboard/person-cell";
 import { DataTable, type Column } from "@/components/ui/table";
+import { useDebounced } from "@/hooks/use-debounced";
+import { useTablePage } from "@/hooks/use-pagination";
+import { formatName, formatTimestamp, maskIp, parseUserAgent } from "@/lib/format";
 import {
-  AUDIT_ENTRIES,
-  AUDIT_MODULES,
-  type AuditEntry,
-} from "@/content/configuration";
+  AUDIT_MODULE_GROUPS,
+  AUDIT_MODULE_GROUP_OF,
+  AuditStatus,
+  type AuditModule,
+  type AuditModuleGroup,
+} from "@/types/enum";
+import type { AdminAuditLog } from "@/types/audit";
 
-const MODULE_ICONS: Record<string, IconSvgElement> = {
+const GROUP_ICONS: Record<AuditModuleGroup, IconSvgElement> = {
   Finance: Wallet01Icon,
   Users: UserGroupIcon,
   Configurations: Settings02Icon,
   Settings: Settings02Icon,
 };
 
-const MODULE_OPTIONS = AUDIT_MODULES.map((module) => ({
-  value: module,
-  label: module,
-  icon: (
-    <Icon icon={MODULE_ICONS[module]} size={16} className="text-grey-400" />
-  ),
+/*
+ * The picker offers the four sidebar sections; the enum is one value per page.
+ * Picking a section sends every module inside it, so the filter and the Module
+ * column agree on what "Finance" means.
+ */
+const GROUP_OPTIONS = (
+  Object.keys(AUDIT_MODULE_GROUPS) as AuditModuleGroup[]
+).map((group) => ({
+  value: group,
+  label: group,
+  icon: <Icon icon={GROUP_ICONS[group]} size={16} className="text-grey-400" />,
 }));
 
-/** One option per distinct admin who appears in the log. */
-const ADMIN_OPTIONS = Array.from(
-  new Map(
-    AUDIT_ENTRIES.map((entry) => [
-      entry.admin.email,
-      {
-        value: entry.admin.email,
-        label: entry.admin.name,
-        icon: <Avatar name={entry.admin.name} size="xs" />,
-      },
-    ]),
-  ).values(),
-);
 
-/**
- * Every administrative action, filterable by module and by admin.
- *
- * Selecting nothing means "no filter"; once a filter is applied the trigger
- * collapses into a removable chip, matching the design.
- */
 export default function AuditLogsPage() {
   const [query, setQuery] = useState("");
-  const [modules, setModules] = useState<string[]>([]);
+  const [groups, setGroups] = useState<string[]>([]);
   const [admins, setAdmins] = useState<string[]>([]);
+  const { page, setPage, pageSize, setPageSize } = useTablePage();
 
-  const rows = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
-    return AUDIT_ENTRIES.filter((entry) => {
-      const matchesModule =
-        modules.length === 0 || modules.includes(entry.module);
-      const matchesAdmin =
-        admins.length === 0 || admins.includes(entry.admin.email);
-      const matchesQuery =
-        !trimmed ||
-        entry.action.toLowerCase().includes(trimmed) ||
-        entry.admin.name.toLowerCase().includes(trimmed);
-      return matchesModule && matchesAdmin && matchesQuery;
-    });
-  }, [query, modules, admins]);
+  const search = useDebounced(query);
 
-  const columns: Column<AuditEntry>[] = [
+  const modules = useMemo(
+    () =>
+      groups.flatMap(
+        (group) => AUDIT_MODULE_GROUPS[group as AuditModuleGroup] ?? [],
+      ),
+    [groups],
+  );
+
+  const { data, isLoading } = useAdminAuditLogs({
+    search: search || undefined,
+    modules: modules.length ? (modules as AuditModule[]) : undefined,
+    admin_ids: admins.length ? admins : undefined,
+    page,
+    limit: pageSize,
+  });
+
+  /* The picker's own search filters this list in place, so it is fetched once
+   * rather than re-queried per keystroke. The chosen ids go into `admin_ids`. */
+  const { data: adminList } = useAdminAccounts({ paginate: false });
+
+  const adminOptions = (adminList?.data ?? []).map((admin) => ({
+    value: admin.id,
+    label: formatName(admin),
+    icon: (
+      <Avatar name={formatName(admin)} src={admin.avatar ?? undefined} size="xs" />
+    ),
+  }));
+
+  const columns: Column<AdminAuditLog>[] = [
     {
       id: "timestamp",
       header: "Timestamp",
-      cell: (row) => row.timestamp,
+      cell: (row) => formatTimestamp(row.created_at),
       width: "min-w-40",
     },
     {
       id: "admin",
       header: "Admin",
       cell: (row) => (
-        <AvatarLabel
-          name={row.admin.name}
-          caption={row.admin.email}
-          size="sm"
-          className="max-w-44"
+        <PersonCell
+          name={`${row.admin_firstname} ${row.admin_lastname}`.trim()}
+          email={row.admin_email}
+          avatar={row.admin_avatar}
         />
       ),
       width: "min-w-52",
     },
-    { id: "module", header: "Module", cell: (row) => row.module },
+    {
+      id: "module",
+      header: "Module",
+      /* The group, not the raw value — a filter labelled "Finance" that
+         returns rows labelled "Treasury" reads like a bug. */
+      cell: (row) => AUDIT_MODULE_GROUP_OF[row.module] ?? row.module,
+    },
     {
       id: "action",
       header: "Action",
-      cell: (row) => <span className="block max-w-64">{row.action}</span>,
+      cell: (row) => (
+        <span className="block max-w-64" title={row.resolver}>
+          {row.action}
+        </span>
+      ),
       width: "min-w-64",
     },
-    { id: "ip", header: "IP Address", cell: (row) => row.ipAddress },
+    {
+      id: "status",
+      header: "Status",
+      /* Not in the design, but "admin login failed ×12" is the entry an
+         auditor most wants and is otherwise indistinguishable from a success. */
+      cell: (row) => (
+        <Badge
+          tone={row.status === AuditStatus.Failure ? "danger" : "success"}
+          variant="outline"
+          size="sm"
+        >
+          {row.status === AuditStatus.Failure ? "Failed" : "Success"}
+        </Badge>
+      ),
+    },
+    { id: "ip", header: "IP Address", cell: (row) => maskIp(row.ip_address) },
     {
       id: "device",
       header: "Device",
-      cell: (row) => (
-        <span className="flex items-center gap-2">
-          <Icon
-            icon={row.device.startsWith("Windows") ? ComputerIcon : LaptopIcon}
-            size={18}
-            className="shrink-0 text-grey-400"
-          />
-          <span className="flex flex-col">
-            <span className="font-medium">{row.device}</span>
-            <span className="text-xs text-grey-400">{row.browser}</span>
-          </span>
-        </span>
-      ),
+      cell: (row) => <DeviceCell agent={row.device} />,
       width: "min-w-52",
     },
   ];
 
-  const hasFilters = modules.length > 0 || admins.length > 0;
+  const hasFilters = groups.length > 0 || admins.length > 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -139,23 +161,30 @@ export default function AuditLogsPage() {
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <SearchInput
             value={query}
-            onChange={setQuery}
+            onChange={(next) => {
+              setQuery(next);
+              setPage(1);
+            }}
+            placeholder="Search action, resolver, IP or admin"
             className="w-full sm:w-80"
           />
 
-          {/* Applied filters replace their trigger with a removable chip. */}
-          {modules.length > 0 ? (
+          {groups.length > 0 ? (
             <FilterChip
-              label={
-                modules.length === 1 ? modules[0] : `${modules.length} Modules`
-              }
-              onRemove={() => setModules([])}
+              label={groups.length === 1 ? groups[0] : `${groups.length} Modules`}
+              onRemove={() => {
+                setGroups([]);
+                setPage(1);
+              }}
             />
           ) : (
             <MultiDropdown
-              options={MODULE_OPTIONS}
-              value={modules}
-              onChange={setModules}
+              options={GROUP_OPTIONS}
+              value={groups}
+              onChange={(next) => {
+                setGroups(next);
+                setPage(1);
+              }}
               label="All modules"
             />
           )}
@@ -164,18 +193,24 @@ export default function AuditLogsPage() {
             <FilterChip
               label={
                 admins.length === 1
-                  ? (ADMIN_OPTIONS.find((option) => option.value === admins[0])
+                  ? (adminOptions.find((option) => option.value === admins[0])
                       ?.label ?? "Admin")
                   : `${admins.length} Admins`
               }
               icon={<Avatar name="Admin" size="xs" />}
-              onRemove={() => setAdmins([])}
+              onRemove={() => {
+                setAdmins([]);
+                setPage(1);
+              }}
             />
           ) : (
             <MultiDropdown
-              options={ADMIN_OPTIONS}
+              options={adminOptions}
               value={admins}
-              onChange={setAdmins}
+              onChange={(next) => {
+                setAdmins(next);
+                setPage(1);
+              }}
               label="All admins"
               searchable
               searchPlaceholder="Search admin"
@@ -184,16 +219,25 @@ export default function AuditLogsPage() {
         </div>
 
         <DataTable
-          data={rows}
+          data={data?.data ?? []}
           columns={columns}
           getRowId={(row) => row.id}
+          isLoading={isLoading}
           minWidth="min-w-6xl"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize,
+            totalItems: data?.pagination?.total ?? 0,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+          }}
           emptyState={
             <EmptyState
               icon={Task01Icon}
               title="No matching activity"
               description={
-                hasFilters
+                hasFilters || search
                   ? "No actions match the filters you applied. Try clearing one."
                   : "Administrative actions will appear here as they happen."
               }
@@ -202,5 +246,27 @@ export default function AuditLogsPage() {
         />
       </section>
     </div>
+  );
+}
+
+/* The API stores the raw user agent; the table shows what a person can read. */
+function DeviceCell({ agent }: { agent: string }) {
+  const parsed = parseUserAgent(agent);
+  if (!parsed) return <span className="text-grey-400">—</span>;
+
+  const handheld = ["iPhone", "iPad", "Android"].includes(parsed.platform);
+
+  return (
+    <span className="flex items-center gap-2" title={agent}>
+      <Icon
+        icon={handheld ? SmartPhone01Icon : ComputerIcon}
+        size={18}
+        className="shrink-0 text-grey-400"
+      />
+      <span className="flex flex-col">
+        <span className="font-medium">{parsed.platform}</span>
+        <span className="text-xs text-grey-400">{parsed.browser}</span>
+      </span>
+    </span>
   );
 }

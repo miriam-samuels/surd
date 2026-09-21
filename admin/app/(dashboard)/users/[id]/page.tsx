@@ -1,27 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { UserDetail } from "@/components/users/user-detail";
-import { USERS, findUser } from "@/content/users";
 
-/** Pre-render every known user at build time. */
-export function generateStaticParams() {
-  return USERS.map((user) => ({ id: user.id }));
-}
+export const metadata: Metadata = { title: "User detail" };
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/users/[id]">): Promise<Metadata> {
-  const { id } = await params;
-  const user = findUser(id);
-  return { title: user ? user.displayName : "User not found" };
-}
-
+/*
+ * Rendered on demand rather than pre-generated: the id is a real account UUID,
+ * so there is no finite set to enumerate at build time, and everything on the
+ * page is per-request admin data behind a session anyway.
+ */
 export default async function UserDetailPage({
   params,
 }: PageProps<"/users/[id]">) {
   const { id } = await params;
-  const user = findUser(id);
-  if (!user) notFound();
-
-  return <UserDetail user={user} />;
+  return <UserDetail userId={id} />;
 }

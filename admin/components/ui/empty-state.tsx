@@ -1,12 +1,11 @@
 import { Icon, type IconSvgElement } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  NoRecordsIllustration,
+  NoResultsIllustration,
+} from "@/components/ui/illustrations";
 import { cn } from "@/lib/cn";
 
-/**
- * What a list shows when it has nothing to list.
- *
- * The illustrations from the comps were never exported, so the default is a
- * tinted glyph. Pass `illustration` to swap in artwork when it lands.
- */
 type EmptyStateProps = {
   title: string;
   description?: string;
@@ -46,5 +45,57 @@ export function EmptyState({
       ) : null}
       {action}
     </div>
+  );
+}
+
+/**
+ * A table's empty state, which is two different states wearing one name.
+ *
+ * With a search or filter applied, the records may well exist — this one
+ * excluded them, and the way out is to clear it. With nothing applied, the
+ * table is genuinely empty and the copy should say what will fill it. Showing
+ * the second message to someone who mistyped a reference sends them looking for
+ * missing money.
+ */
+export function TableEmptyState({
+  title,
+  description,
+  query,
+  onClearSearch,
+  action,
+}: {
+  /** Used when nothing is filtered — name the thing, e.g. "No Capital Transactions Record Yet". */
+  title: string;
+  description?: string;
+
+  /** The active search term, if any. Its presence picks the state. */
+  query?: string;
+  onClearSearch?: () => void;
+  action?: React.ReactNode;
+}) {
+  if (query) {
+    return (
+      <EmptyState
+        illustration={<NoResultsIllustration />}
+        title="No matching record."
+        description={`Your search for “${query}” is not found.`}
+        action={
+          onClearSearch ? (
+            <Button tone="primary" size="xl" shape="pill" onClick={onClearSearch}>
+              Clear search
+            </Button>
+          ) : null
+        }
+      />
+    );
+  }
+
+  return (
+    <EmptyState
+      illustration={<NoRecordsIllustration />}
+      title={title}
+      description={description}
+      action={action}
+    />
   );
 }

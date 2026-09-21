@@ -28,7 +28,7 @@ export function HeroSection() {
           <span className="text-grey-1000">{HERO.title}</span>
         </h1>
 
-        <p className="mt-10 max-w-2xl text-base font-medium text-grey-400">
+        <p className="mt-10 max-w-3xl text-lg font-medium text-grey-400">
           {HERO.body}
         </p>
 
