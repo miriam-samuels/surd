@@ -8,3 +8,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Netlify auto-detects this, but declaring it means a misdetection fails the
+# build loudly instead of publishing `.next` as static files (another 404).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
