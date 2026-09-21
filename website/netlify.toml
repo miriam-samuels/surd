@@ -1,0 +1,15 @@
+# Netlify reads this only when the site's Base directory is set to `website`
+# (Site configuration → Build & deploy → Build settings). The repo root holds
+# both `admin/` and `website/` and no app of its own, so building from the
+# root publishes an empty folder — which Netlify serves as a 404.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Netlify auto-detects this, but declaring it means a misdetection fails the
+# build loudly instead of publishing `.next` as static files (another 404).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
