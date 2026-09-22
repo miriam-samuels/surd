@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Edit02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { PencilEdit02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { useAdminPlatformConfigKeys, useModifyPlatformConfig } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { Dropdown } from "@/components/ui/dropdown";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -23,12 +24,15 @@ import {
 
 /* Shown beside the value so the admin can see what they are typing into. */
 const UNIT_SUFFIX: Record<ConfigUnit, string> = {
-  [ConfigUnit.Percentage]: "%",
-  [ConfigUnit.Ngn]: "₦",
-  [ConfigUnit.Usd]: "$",
-  [ConfigUnit.Hours]: "hours",
-  [ConfigUnit.Days]: "days",
+  [ConfigUnit.Percentage]: "% Percentage",
+  [ConfigUnit.Ngn]: "₦ Naira",
+  [ConfigUnit.Usd]: "$ Dollar",
+  [ConfigUnit.Hours]: "Hours",
+  [ConfigUnit.Days]: "Days",
 };
+
+/* The filled, borderless control the modal's fields share. */
+const CONTROL = "h-14 w-full rounded-xl border-transparent bg-grey-25 px-4 text-md";
 
 /*
  * While the USD ceiling is zero the system falls back to the NGN cap converted
@@ -48,7 +52,7 @@ export default function PlatformConfigurationPage() {
     {
       id: "type",
       header: "Type",
-      cell: (row) => <span className="font-medium">{row.label}</span>,
+      cell: (row) => <span className="text-grey-900">{row.label}</span>,
       width: "min-w-48",
     },
     {
@@ -64,7 +68,7 @@ export default function PlatformConfigurationPage() {
       id: "description",
       header: "Description",
       cell: (row) => (
-        <span className="block max-w-md text-grey-600">{row.description}</span>
+        <span className="block max-w-md text-grey-900">{row.description}</span>
       ),
       width: "min-w-80",
     },
@@ -94,7 +98,7 @@ export default function PlatformConfigurationPage() {
             variant="soft"
             size="md"
             shape="pill"
-            leadingIcon={Edit02Icon}
+            leadingIcon={PencilEdit02Icon}
             onClick={() => edit.open(row)}
           >
             Edit
@@ -111,7 +115,7 @@ export default function PlatformConfigurationPage() {
         description="Manage all relevant variable system keys"
       />
 
-      <section className="rounded-2xl border border-grey-50 bg-white p-4 sm:p-5">
+      <section className="rounded-2xl border border-grey-50 bg-white p-4 sm:p-7">
         <DataTable
           data={data?.data ?? []}
           columns={columns}
@@ -132,7 +136,11 @@ export default function PlatformConfigurationPage() {
       {/* Mounted per row, so the form always opens on that row's own value
           rather than whatever was last typed into it. */}
       {edit.isOpen && edit.data ? (
-        <EditConfigKeyDialog control={edit} config={edit.data} />
+        <EditConfigKeyDialog
+          control={edit}
+          initial={edit.data}
+          rows={data?.data ?? [edit.data]}
+        />
       ) : null}
     </div>
   );
@@ -140,13 +148,27 @@ export default function PlatformConfigurationPage() {
 
 function EditConfigKeyDialog({
   control,
-  config,
+  initial,
+  rows,
 }: {
   control: ReturnType<typeof useDisclosure<AdminPlatformConfigKey>>;
-  config: AdminPlatformConfigKey;
+  initial: AdminPlatformConfigKey;
+  rows: AdminPlatformConfigKey[];
 }) {
-  const [value, setValue] = useState(String(config.value));
+  const [config, setConfig] = useState(initial);
+  const [value, setValue] = useState(String(initial.value));
   const save = useModifyPlatformConfig({ onSuccess: control.close });
+
+  /* Type picks *which key to edit*, as the design's dropdown does — it cannot
+   * retype a key, which the backend has no way to do. Switching loads that
+   * key's own value and unit, so a figure typed for one key can never be
+   * saved against another. */
+  const selectKey = (key: string) => {
+    const next = rows.find((row) => row.key === key);
+    if (!next) return;
+    setConfig(next);
+    setValue(String(next.value));
+  };
 
   const parsed = Number(value);
 
@@ -157,6 +179,8 @@ function EditConfigKeyDialog({
   const submit = () => {
     if (invalid) return;
 
+    /* Only the one field: every input field is optional and omitted ones are
+       left alone, so sending more would overwrite keys nobody opened. */
     const { field, integer } = CONFIG_KEY_FIELDS[config.key];
     save.mutate({ [field]: integer ? Math.round(parsed) : parsed });
   };
@@ -165,16 +189,20 @@ function EditConfigKeyDialog({
     <Dialog
       control={control}
       title="Edit Config Key"
-      icon={Edit02Icon}
+      icon={PencilEdit02Icon}
+      width="lg"
       confirmLabel="Save changes"
       onConfirm={submit}
       confirmDisabled={invalid}
       isSubmitting={save.isPending}
     >
-      {/* Locked to the row that was clicked — the backend cannot change which
-          key a row is, and the key set is fixed. */}
       <Field label="Type">
-        <Input value={config.label} readOnly />
+        <Dropdown
+          options={rows.map((row) => ({ value: row.key, label: row.label }))}
+          value={config.key}
+          onChange={selectKey}
+          className={CONTROL}
+        />
       </Field>
 
       <Field
@@ -183,19 +211,22 @@ function EditConfigKeyDialog({
         error={invalid && value !== "" ? "Enter a number of 0 or more." : undefined}
         hint={HINTS[config.key]}
       >
-        <div className="flex items-center gap-3">
-          <Input
-            id="config-value"
-            type="number"
-            min={0}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            className="flex-1"
-          />
+        <div className="flex items-stretch gap-3">
+          <div className="flex-1">
+            <Input
+              id="config-value"
+              type="number"
+              min={0}
+              step={CONFIG_KEY_FIELDS[config.key].integer ? 1 : "any"}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              className="rounded-xl text-md"
+            />
+          </div>
           {/* A fixed suffix, not a picker: the unit is intrinsic to the key.
               Switching it would let "Operating Buffer = 2.5 NGN" through while
               the deployable-capital formula still read 2.5 as a percent. */}
-          <span className="grid h-14 w-28 shrink-0 place-items-center rounded-lg bg-grey-25 text-sm font-semibold text-grey-600">
+          <span className="flex h-14 w-44 shrink-0 items-center rounded-xl bg-grey-25 px-4 text-md text-grey-900">
             {UNIT_SUFFIX[config.unit]}
           </span>
         </div>
@@ -204,7 +235,7 @@ function EditConfigKeyDialog({
       {/* Read-only: this copy describes behaviour that only changes when the
           code does, and the mutation does not accept it. */}
       <Field label="Description">
-        <p className="rounded-xl bg-grey-25 px-4 py-3 text-sm text-grey-600">
+        <p className="min-h-32 rounded-xl bg-grey-25 px-4 py-4 text-md text-grey-900">
           {config.description}
         </p>
       </Field>

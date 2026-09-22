@@ -68,7 +68,7 @@ export type DialogWidth = keyof typeof widths;
 
 type DialogProps = {
   control: Pick<Disclosure<unknown>, "isOpen" | "setOpen" | "close">;
-  title: string;
+  title: React.ReactNode;
   description?: string;
   tone?: DialogTone;
   width?: DialogWidth;
@@ -76,6 +76,8 @@ type DialogProps = {
   icon?: IconSvgElement;
   children?: React.ReactNode;
   confirmLabel?: string;
+  /** Trails the confirm label — "Send invite" carries a paper plane. */
+  confirmIcon?: IconSvgElement;
   cancelLabel?: string;
   onConfirm?: () => void;
 
@@ -92,6 +94,7 @@ export function Dialog({
   icon,
   children,
   confirmLabel,
+  confirmIcon,
   cancelLabel = "Cancel",
   onConfirm,
   confirmDisabled = false,
@@ -130,6 +133,7 @@ export function Dialog({
               title={title}
               description={description}
               confirmLabel={confirmLabel}
+              confirmIcon={confirmIcon}
               cancelLabel={cancelLabel}
               onConfirm={onConfirm}
               confirmDisabled={confirmDisabled}
@@ -168,16 +172,18 @@ function FormBody({
   description,
   children,
   confirmLabel,
+  confirmIcon,
   cancelLabel,
   onConfirm,
   confirmDisabled,
   isSubmitting,
 }: {
   icon?: IconSvgElement;
-  title: string;
+  title: React.ReactNode;
   description?: string;
   children?: React.ReactNode;
   confirmLabel?: string;
+  confirmIcon?: IconSvgElement;
   cancelLabel: string;
   onConfirm?: () => void;
   confirmDisabled: boolean;
@@ -215,6 +221,7 @@ function FormBody({
             size="xl"
             shape="pill"
             block
+            trailingIcon={isSubmitting ? undefined : confirmIcon}
             onClick={onConfirm}
             disabled={confirmDisabled || isSubmitting}
           >
@@ -238,7 +245,7 @@ function ConfirmationBody({
   isSubmitting,
 }: {
   config: ToneConfig;
-  title: string;
+  title: React.ReactNode;
   description?: string;
   children?: React.ReactNode;
   confirmLabel?: string;

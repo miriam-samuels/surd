@@ -34,6 +34,43 @@ export const graphQLClient = new GraphQLClient(ENDPOINT, {
 
 type Body = Record<string, IResponse | undefined>;
 
+const SESSION_REJECTED = "Your session is no longer valid. Please sign in again.";
+
+/*
+ * A 401 means the token is dead (or the account is no longer an admin), so the
+ * session ends: clearing the token announces "unauthorized", the session
+ * context empties the query cache, and RequireSession redirects to /login.
+ *
+ * Only 401. A 403 is a live admin missing one privilege — signing them out for
+ * opening a page they can't use would be the wrong answer.
+ *
+ * Guarded by `hasToken()` so a 401 from the login form itself (bad password,
+ * no session yet) is just an error, not a sign-out.
+ */
+export const SESSION_ENDED = "SESSION_ENDED";
+
+function rejectSession(message?: string, code?: string): never {
+  if (hasToken()) {
+    clearToken("unauthorized");
+    /* Tagged so the error toast can stand down: the session context is
+       already telling the admin to sign in again. */
+    throw new APIError(message || SESSION_REJECTED, SESSION_ENDED, 401);
+  }
+  throw new APIError(message || SESSION_REJECTED, code, 401);
+}
+
+/* GraphQL-level errors carry the status in `extensions`, if anywhere. */
+function isUnauthenticated(error?: {
+  extensions?: Record<string, unknown>;
+}) {
+  const extensions = error?.extensions;
+  return (
+    extensions?.status === 401 ||
+    extensions?.code === "UNAUTHENTICATED" ||
+    extensions?.code === "UNAUTHORIZED"
+  );
+}
+
 // get body of response and transform it for easy access
 async function send(document: string, input: unknown, signal?: AbortSignal) {
   try {
@@ -44,6 +81,10 @@ async function send(document: string, input: unknown, signal?: AbortSignal) {
     });
   } catch (caught) {
     if (caught instanceof ClientError) {
+      /* Rejected before any resolver ran — the auth middleware answering
+         with a bare HTTP 401. */
+      if (caught.response?.status === 401) rejectSession();
+
       if (caught.response?.data) {
         return {
           data: caught.response.data as Body,
@@ -52,8 +93,9 @@ async function send(document: string, input: unknown, signal?: AbortSignal) {
       }
 
       // graphql specific errors
-      const rejected = caught.response?.errors?.[0]?.message;
-      if (rejected) throw new APIError(rejected);
+      const first = caught.response?.errors?.[0];
+      if (isUnauthenticated(first)) rejectSession(first?.message, "UNAUTHENTICATED");
+      if (first?.message) throw new APIError(first.message);
     }
 
     throw new APIError(
@@ -118,8 +160,7 @@ export async function request<TData>(
   const payload = data?.[resolver];
 
   if (!payload || payload.__typename === "Error") {
- 
-    if (payload?.status === 401 && hasToken()) clearToken("unauthorized");
+    if (payload?.status === 401) rejectSession(payload.message, payload.code);
 
     throw new APIError(
       payload?.message || "The server returned an empty response.",

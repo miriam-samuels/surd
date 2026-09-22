@@ -4,11 +4,11 @@ import { useState } from "react";
 import {
   CheckmarkCircle02Icon,
   Delete02Icon,
-  Edit02Icon,
+  PencilEdit02Icon,
   PlusSignIcon,
   SentIcon,
   UnavailableIcon,
-  UserGroupIcon,
+  UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   useAdminAccounts,
@@ -26,11 +26,16 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog } from "@/components/ui/dialog";
 import { Dropdown } from "@/components/ui/dropdown";
-import { EmptyState } from "@/components/ui/empty-state";
+import { TableEmptyState } from "@/components/ui/empty-state";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  TableFilter,
+  type FilterGroup,
+  type FilterOption,
+} from "@/components/ui/table-controls";
 import { toast } from "@/components/ui/toast";
 import { Can } from "@/components/auth/can";
 import { PersonCell } from "@/components/dashboard/person-cell";
@@ -44,15 +49,32 @@ import { AdminAccountStatus, type AdminPrivilege } from "@/types/enum";
 import { Permission } from "@/types/permission";
 import { accountStatus, type AdminAccount } from "@/types/admin-account";
 
-
 const STATUS_LABELS: Record<AdminAccountStatus, string> = {
   [AdminAccountStatus.Active]: "Active",
   [AdminAccountStatus.PendingInvite]: "Pending invite",
   [AdminAccountStatus.Suspended]: "Suspended",
 };
 
+const STATUS_OPTIONS: FilterOption[] = [
+  { value: "", label: "All" },
+  ...Object.values(AdminAccountStatus).map((status) => ({
+    value: status,
+    label: STATUS_LABELS[status],
+  })),
+];
+
+/* The filled, borderless control every field in these modals uses. */
+const CONTROL = "h-14 w-full rounded-xl border-transparent bg-grey-25 px-4 text-md";
+
+/*
+ * No Sort by, though the blurred frames behind the modals show one:
+ * `AdminAccountsFilterInput` takes no sort field, so the control would have
+ * nothing to send. Filter maps onto its `status` and `role_id`.
+ */
+
 export default function AdminAccountsPage() {
   const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState<Record<string, string | undefined>>({});
   const { page, setPage, pageSize, setPageSize } = useTablePage();
 
   const invite = useDisclosure<void>();
@@ -65,11 +87,41 @@ export default function AdminAccountsPage() {
 
   const { data, isLoading } = useAdminAccounts({
     search: search || undefined,
+    status: (filters.status || undefined) as AdminAccountStatus | undefined,
+    role_id: filters.role || undefined,
     page,
     limit: pageSize,
   });
 
+  const { data: roles } = useAdminPortalRoles();
   const resendInvite = useAdminResendInvite();
+
+  /* Super Admin rows carry no actions, as in the design. The server would
+     refuse suspending the last one anyway; hiding the controls stops an admin
+     reaching for a lockout guard to find out. */
+  const systemRoles = new Set(
+    (roles?.data ?? []).filter((role) => role.system).map((role) => role.id),
+  );
+
+  const filterGroups: FilterGroup[] = [
+    { id: "status", label: "Status", options: STATUS_OPTIONS },
+    {
+      id: "role",
+      label: "Role",
+      options: [
+        { value: "", label: "All" },
+        ...(roles?.data ?? []).map((role) => ({ value: role.id, label: role.name })),
+      ],
+    },
+  ];
+
+  /* A narrowed result set starts back at page one. */
+  const reset =
+    <T,>(setter: (value: T) => void) =>
+    (value: T) => {
+      setter(value);
+      setPage(1);
+    };
 
   const columns: Column<AdminAccount>[] = [
     {
@@ -88,7 +140,7 @@ export default function AdminAccountsPage() {
       id: "role",
       header: "Role",
       cell: (admin) => (
-        <span className="font-semibold">{admin.admin_role_name ?? "—"}</span>
+        <span className="font-semibold text-grey-900">{admin.admin_role_name ?? "—"}</span>
       ),
     },
     {
@@ -112,12 +164,13 @@ export default function AdminAccountsPage() {
       header: "Actions",
       cell: (admin) => {
         const status = accountStatus(admin);
+        if (admin.admin_role_id && systemRoles.has(admin.admin_role_id)) return null;
 
         return (
           /* The server enforces ADMIN_ONBOARDING regardless; hiding the
              controls just stops the click that was always going to 403. */
           <Can do={Permission.AdminsManage}>
-            <span className="flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-2">
               {status === AdminAccountStatus.PendingInvite ? (
                 <>
                   <Button
@@ -147,7 +200,7 @@ export default function AdminAccountsPage() {
                     variant="soft"
                     size="md"
                     shape="pill"
-                    leadingIcon={Edit02Icon}
+                    leadingIcon={PencilEdit02Icon}
                     onClick={() => editRole.open(admin)}
                   >
                     Edit role
@@ -184,7 +237,7 @@ export default function AdminAccountsPage() {
           </Can>
         );
       },
-      width: "min-w-72",
+      width: "min-w-64",
     },
   ];
 
@@ -208,16 +261,20 @@ export default function AdminAccountsPage() {
         }
       />
 
-      <section className="rounded-2xl border border-grey-50 bg-white p-4 sm:p-5">
-        <SearchInput
-          value={query}
-          onChange={(next) => {
-            setQuery(next);
-            setPage(1);
-          }}
-          placeholder="Search name or email"
-          className="mb-5 w-full sm:w-80"
-        />
+      <section className="flex flex-col gap-6 rounded-2xl border border-grey-50 bg-white p-4 sm:p-7">
+        <div className="flex justify-between items-center gap-3">
+          <SearchInput
+            value={query}
+            onChange={reset(setQuery)}
+            placeholder="Search..."
+            className="w-full sm:w-96"
+          />
+          <TableFilter
+            groups={filterGroups}
+            value={filters}
+            onChange={reset(setFilters)}
+          />
+        </div>
 
         <DataTable
           data={data?.data ?? []}
@@ -234,14 +291,11 @@ export default function AdminAccountsPage() {
             onPageSizeChange: setPageSize,
           }}
           emptyState={
-            <EmptyState
-              icon={UserGroupIcon}
+            <TableEmptyState
+              query={search}
+              onClearSearch={() => reset(setQuery)("")}
               title="No admin accounts"
-              description={
-                search
-                  ? "No admin matches that search."
-                  : "Invite an admin to give them access to the portal."
-              }
+              description="Invite an admin to give them access to the portal."
             />
           }
         />
@@ -304,7 +358,13 @@ function useRoleForm(initialRoleId: string, initialPrivileges: AdminPrivilege[])
   };
 }
 
-function RoleFields({ form }: { form: ReturnType<typeof useRoleForm> }) {
+function RoleFields({
+  form,
+  placeholder = "Select a role",
+}: {
+  form: ReturnType<typeof useRoleForm>;
+  placeholder?: string;
+}) {
   /* Super Admin bypasses every privilege check, so ticking boxes for it would
    * be theatre. Disable the list and say why. */
   const isSystemRole = form.role?.system ?? false;
@@ -316,8 +376,8 @@ function RoleFields({ form }: { form: ReturnType<typeof useRoleForm> }) {
           options={form.roleOptions}
           value={form.roleId}
           onChange={form.selectRole}
-          placeholder="Select a role"
-          className="h-12 w-full rounded-xl border-transparent bg-grey-25"
+          placeholder={placeholder}
+          className={CONTROL}
         />
       </Field>
 
@@ -326,17 +386,19 @@ function RoleFields({ form }: { form: ReturnType<typeof useRoleForm> }) {
         hint={
           isSystemRole
             ? "Super Admin holds every privilege by design — this list does not apply."
-            : "Defaults come from the role. Tick only what should differ."
+            : undefined
         }
       >
-        <ul className="flex flex-col gap-1 rounded-xl bg-grey-25 p-2">
+        {/* The label alone, as the design shows; the server's description
+            rides along as a tooltip rather than being dropped. */}
+        <ul className="flex flex-col rounded-xl bg-grey-25 px-5 py-2">
           {form.privilegeOptions.map((option) => (
             <li key={option.privilege}>
-              <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg px-3 py-2.5 hover:bg-white">
-                <span className="flex flex-col">
-                  <span className="text-sm text-grey-900">{option.label}</span>
-                  <span className="text-xs text-grey-500">{option.description}</span>
-                </span>
+              <label
+                title={option.description}
+                className="flex cursor-pointer items-center justify-between gap-3 py-3"
+              >
+                <span className="text-sm text-grey-900">{option.label}</span>
                 <Checkbox
                   shape="square"
                   disabled={isSystemRole}
@@ -362,9 +424,8 @@ function InviteAdminDialog({
   const form = useRoleForm("", []);
 
   const invite = useAdminInviteAdmin({
-    /* Silent so the expiry can go in the toast — the invite link is
-     * single-use and lives 48 hours, which the inviter needs to know. */
-    silent: true,
+    /* The expiry goes in the toast — the invite link is single-use and lives
+     * 48 hours, which the inviter needs to know. */
     onSuccess: (response) => {
       toast({
         tone: "success",
@@ -382,8 +443,10 @@ function InviteAdminDialog({
     <Dialog
       control={control}
       title="Invite admin"
-      icon={SentIcon}
+      icon={UserAdd01Icon}
+      width="lg"
       confirmLabel="Send invite"
+      confirmIcon={SentIcon}
       confirmDisabled={incomplete}
       isSubmitting={invite.isPending}
       onConfirm={() =>
@@ -403,6 +466,7 @@ function InviteAdminDialog({
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
           placeholder="e.g. John Doe"
+          className="rounded-xl text-md"
         />
       </Field>
 
@@ -413,10 +477,11 @@ function InviteAdminDialog({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="example@gmail.com"
+          className="rounded-xl text-md"
         />
       </Field>
 
-      <RoleFields form={form} />
+      <RoleFields form={form} placeholder="Admin" />
     </Dialog>
   );
 }
@@ -435,7 +500,8 @@ function EditRoleDialog({
     <Dialog
       control={control}
       title="Edit Admin Role"
-      icon={Edit02Icon}
+      icon={PencilEdit02Icon}
+      width="lg"
       confirmLabel="Save changes"
       confirmDisabled={!form.roleId}
       isSubmitting={save.isPending}
@@ -451,9 +517,9 @@ function EditRoleDialog({
     >
       <div className="flex items-center gap-4">
         <Avatar name={formatName(admin)} src={admin.avatar ?? undefined} size="xl" />
-        <div>
-          <p className="text-lg font-bold text-grey-900">{formatName(admin)}</p>
-          <p className="text-sm text-grey-500">{admin.email}</p>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="truncate text-lg font-medium text-grey-900">{formatName(admin)}</p>
+          <p className="truncate text-md text-grey-600">{admin.email}</p>
         </div>
       </div>
 
@@ -475,14 +541,27 @@ function SuspendDialog({
   control: ReturnType<typeof useDisclosure<AdminAccount>>;
 }) {
   const admin = control.data;
-  const suspend = useAdminSuspendAdmin({ onSuccess: control.close });
+  const suspend = useAdminSuspendAdmin({
+    onSuccess: () => {
+      toast({ tone: "warning", message: "Admin Account has been suspended." });
+      control.close();
+    },
+  });
 
   return (
     <Dialog
       control={control}
       tone="danger"
-      title={`Suspend ${admin ? formatName(admin) : "this admin"}?`}
-      description="They lose portal access immediately and are signed out on every device. You can reactivate them later."
+      width="lg"
+      title={
+        <>
+          Are you sure you want to suspend
+          <span className="block text-grey-600">
+            “{admin ? formatName(admin) : "this admin"}”
+          </span>
+        </>
+      }
+      description="Once suspended, this admin will lose account access and be signed out across all devices."
       confirmLabel="Suspend admin"
       isSubmitting={suspend.isPending}
       onConfirm={() => admin && suspend.mutate({ user_id: admin.id })}

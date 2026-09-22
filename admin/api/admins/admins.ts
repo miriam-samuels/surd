@@ -54,6 +54,9 @@ export const useAdminInviteAdmin = createMutation<
 >({
   resolver: "adminInviteAdmin",
   document: ADMIN_INVITE_ADMIN_MUTATION,
+  /* The modal raises its own toast carrying the link's expiry. `false` rather
+     than `silent`, which would also swallow a 409 duplicate-email refusal. */
+  success: false,
   invalidates: ["admins", "audit"],
 });
 
@@ -74,7 +77,8 @@ export const useAdminUpdateAdminAccount = createMutation<
 export const useAdminSuspendAdmin = createMutation<never, AdminAccountActionInput>({
   resolver: "adminSuspendAdmin",
   document: ADMIN_SUSPEND_ADMIN_MUTATION,
-  success: "Admin account suspended.",
+  /* The page raises the design's warning-toned toast instead. */
+  success: false,
   invalidates: ["admins", "audit"],
 });
 

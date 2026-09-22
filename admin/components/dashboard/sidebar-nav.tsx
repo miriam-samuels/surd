@@ -124,18 +124,19 @@ function SidebarLink({
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-md font-medium",
+        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
         "outline-none transition-colors focus-visible:shadow-ring-primary",
         collapsed && "justify-center px-0",
         active
           ?
             "rotating-border font-semibold text-primary"
-          : "text-grey-800 hover:bg-grey-25 hover:text-grey-900",
+          : "text-grey-600 hover:bg-grey-25 hover:text-grey-900",
       )}
     >
       <Icon
         icon={item.icon}
         size={20}
+        strokeWidth={1}
         className={cn("shrink-0", active ? "text-primary" : "text-grey-600")}
       />
 

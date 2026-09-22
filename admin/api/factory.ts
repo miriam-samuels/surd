@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { request } from "@/api/graphql-client";
+import { request, SESSION_ENDED } from "@/api/graphql-client";
 import { touchSession } from "@/api/session-token";
 import type { Scope } from "@/api/query-keys";
 import { toast } from "@/components/ui/toast";
@@ -27,6 +27,10 @@ function handleSuccess(response: IResponse, message?: string | false) {
 }
 
 function handleError(error: APIError) {
+  /* The session context already says "please sign in again" when a 401 ends
+     the session; a second, red toast for the same event is noise. A 401 with
+     no session behind it — a wrong password — still shows. */
+  if (error.code === SESSION_ENDED) return;
   toast({ tone: "danger", message: error.message });
 }
 
